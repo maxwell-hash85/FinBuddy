@@ -15,6 +15,31 @@ function Message({ transactions, balance, savingsRate, topCat }) {
     );
   }
 
+  const incomeTx = transactions.filter((t) => t.type === "income");
+  const expenseTx = transactions.filter((t) => t.type === "expense");
+  const totalExpenses = expenseTx.reduce((sum, t) => sum + t.amount, 0);
+  const totalIncome = incomeTx.reduce((sum, t) => sum + t.amount, 0);
+  const avgIncome = incomeTx.length > 0 ? totalIncome / incomeTx.length : 0;
+
+  if (incomeTx.length > 0 && totalExpenses > avgIncome) {
+    return (
+      <>
+        <span style={{ color: COLORS.red, fontWeight: 700 }}>
+          Caution: spending is outpacing your typical income.
+        </span>
+        <br />
+        Your total expenses are <span style={{ color: COLORS.red, fontWeight: 700 }}>{fmt(totalExpenses)}</span>,
+        which is higher than your average income of{" "}
+        <span style={{ color: COLORS.textPrimary, fontWeight: 700 }}>{fmt(avgIncome)}</span>.
+        {topCat && (
+          <>
+            {" "}Consider cutting back on <span style={{ color: COLORS.red }}>{topCat}</span>.
+          </>
+        )}
+      </>
+    );
+  }
+
   if (balance > 0) {
     return (
       <>
