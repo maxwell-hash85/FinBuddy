@@ -87,7 +87,6 @@ export default function Insights({ transactions, balance, savingsRate }) {
         style={{
           background: COLORS.surface,
           border: `1px solid ${COLORS.border}`,
-          borderLeft: `3px solid ${COLORS.green}`,
           borderRadius: "12px",
           padding: "1.25rem 1.5rem",
           display: "flex",
