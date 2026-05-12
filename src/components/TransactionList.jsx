@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { COLORS } from "../styles/colors";
+import { useTheme } from "../context/useTheme";
 import { fmt } from "../utils/calcFinance";
 
 export default function TransactionList({ transactions, onDelete }) {
+  const { colors: COLORS } = useTheme();
   const [hoveredId, setHoveredId] = useState(null);
 
   if (transactions.length === 0) {

@@ -1,6 +1,7 @@
-import { COLORS } from "../styles/colors";
+import { useTheme } from "../context/useTheme";
 
 export default function BalanceCard({ balance, transactions }) {
+  const { colors: COLORS } = useTheme();
   const balanceColor =
     balance > 0 ? COLORS.green : balance < 0 ? COLORS.red : COLORS.textPrimary;
 

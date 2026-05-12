@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { COLORS } from "../styles/colors";
+import { useTheme } from "../context/useTheme";
 
 async function fetchInsight(context) {
   const res = await fetch("/api/insights", {
@@ -39,6 +39,7 @@ function heuristicInsight(context) {
 }
 
 export default function FinBuddyInsightCard({ context }) {
+  const { colors: COLORS } = useTheme();
   const [text, setText] = useState(() => heuristicInsight(context));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

@@ -1,21 +1,22 @@
 import { useState } from "react";
-import { COLORS } from "../styles/colors";
-
-const inputStyle = {
-  height: "40px",
-  background: COLORS.bg,
-  border: `1px solid ${COLORS.borderAccent}`,
-  borderRadius: "8px",
-  padding: "0 12px",
-  fontSize: "13px",
-  fontFamily: "inherit",
-  color: COLORS.textPrimary,
-  outline: "none",
-  width: "100%",
-  boxSizing: "border-box",
-};
+import { useTheme } from "../context/useTheme";
 
 export default function TransactionForm({ onAdd }) {
+  const { colors: COLORS } = useTheme();
+  const inputStyle = {
+    height: "40px",
+    background: COLORS.bg,
+    border: `1px solid ${COLORS.borderAccent}`,
+    borderRadius: "8px",
+    padding: "0 12px",
+    fontSize: "13px",
+    fontFamily: "inherit",
+    color: COLORS.textPrimary,
+    outline: "none",
+    width: "100%",
+    boxSizing: "border-box",
+  };
+
   const [amount, setAmount] = useState("");
   const [type, setType] = useState("income");
   const [category, setCategory] = useState("");
@@ -75,7 +76,7 @@ export default function TransactionForm({ onAdd }) {
             style={{
               ...inputStyle,
               borderColor: error ? COLORS.red : COLORS.borderAccent,
-              boxShadow: error ? `0 0 0 2px rgba(239,68,68,0.2)` : "none",
+              boxShadow: error ? `0 0 0 2px ${COLORS.redSoft}` : "none",
             }}
             type="number"
             placeholder="0.00"
@@ -135,6 +136,7 @@ export default function TransactionForm({ onAdd }) {
       </div>
 
       <button
+        type="button"
         style={{
           height: "42px",
           background: COLORS.blue,
@@ -148,10 +150,18 @@ export default function TransactionForm({ onAdd }) {
           cursor: "pointer",
         }}
         onClick={handleAdd}
-        onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.blueDark)}
-        onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.blue)}
-        onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
-        onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = COLORS.blueDark;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = COLORS.blue;
+        }}
+        onMouseDown={(e) => {
+          e.currentTarget.style.transform = "scale(0.98)";
+        }}
+        onMouseUp={(e) => {
+          e.currentTarget.style.transform = "scale(1)";
+        }}
       >
         + ADD TRANSACTION
       </button>

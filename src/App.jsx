@@ -1,7 +1,12 @@
 import FinBuddy from "./FinBuddy";
+import { ThemeProvider } from "./context/ThemeProvider";
 
 function App() {
-  return <FinBuddy />;
+  return (
+    <ThemeProvider>
+      <FinBuddy />
+    </ThemeProvider>
+  );
 }
 
 export default App;

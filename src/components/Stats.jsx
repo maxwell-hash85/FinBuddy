@@ -1,7 +1,8 @@
-import { COLORS } from "../styles/colors";
+import { useTheme } from "../context/useTheme";
 import { fmt } from "../utils/calcFinance";
 
 export default function Stats({ income, expense }) {
+  const { colors: COLORS } = useTheme();
   return (
     <div
       style={{

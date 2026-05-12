@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { COLORS } from "../styles/colors";
+import { useTheme } from "../context/useTheme";
 
 function formatTime(ts) {
   try {
@@ -50,6 +50,7 @@ async function fetchBuddyReply({ messages, context }) {
 }
 
 export default function BuddyChat({ context }) {
+  const { colors: COLORS } = useTheme();
   const [messages, setMessages] = useState(() => {
     const at = Date.now();
     return [

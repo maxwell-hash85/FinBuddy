@@ -1,7 +1,7 @@
-import { COLORS } from "../styles/colors";
+import { useTheme } from "../context/useTheme";
 import { fmt, getTopCategory, getSpendingByCategory } from "../utils/calcFinance";
 
-function Message({ transactions, balance, savingsRate, topCat }) {
+function Message({ transactions, balance, savingsRate, topCat, colors: COLORS }) {
   if (!transactions || transactions.length === 0) {
     return (
       <>
@@ -101,6 +101,7 @@ function Message({ transactions, balance, savingsRate, topCat }) {
 }
 
 export default function Insights({ transactions, balance, savingsRate }) {
+  const { colors: COLORS } = useTheme();
   const topCat = getTopCategory(transactions);
   const breakdown = getSpendingByCategory(transactions);
 
@@ -142,6 +143,7 @@ export default function Insights({ transactions, balance, savingsRate }) {
             balance={balance}
             savingsRate={savingsRate}
             topCat={topCat}
+            colors={COLORS}
           />
         </div>
       </div>
