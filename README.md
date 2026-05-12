@@ -12,8 +12,8 @@ npm install
 
 Create a `.env` file (copy from `.env.example`) and set **one** provider key:
 
-- **OpenAI**: set `OPENAI_API_KEY` (default, `AI_PROVIDER=openai`)
-- **Anthropic (Claude)**: set `ANTHROPIC_API_KEY` and `AI_PROVIDER=anthropic`
+- **Anthropic (Claude)** (recommended): set `ANTHROPIC_API_KEY` and `AI_PROVIDER=anthropic`
+- **OpenAI**: set `OPENAI_API_KEY` and `AI_PROVIDER=openai`
 
 Start UI + API together:
 
@@ -23,3 +23,10 @@ npm run dev
 
 - UI: Vite dev server
 - API: `http://localhost:5174` (proxied from the UI via `/api/*`)
+
+## API
+
+- `POST /api/chat` — `{ messages, context }` for conversational guidance.
+- `POST /api/insights` — `{ context }` returns `{ insight }` (Claude/OpenAI when configured; heuristic fallback otherwise).
+
+`GET /api/insights` returns **405** — use **POST** with the financial snapshot.

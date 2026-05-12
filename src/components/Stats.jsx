@@ -20,6 +20,7 @@ export default function Stats({ income, expense }) {
           display: "flex",
           flexDirection: "column",
           gap: "8px",
+          boxShadow: COLORS.shadowSm,
         }}
       >
         <div
@@ -64,6 +65,7 @@ export default function Stats({ income, expense }) {
           display: "flex",
           flexDirection: "column",
           gap: "8px",
+          boxShadow: COLORS.shadowSm,
         }}
       >
         <div

@@ -13,14 +13,84 @@ app.get("/api/health", (_req, res) => {
 function buildSystemPrompt(context) {
   const ctx = context && typeof context === "object" ? context : {};
   return [
-    "You are FinBuddy, a friendly but direct personal finance buddy.",
-    "Give actionable advice in 2-6 short sentences.",
-    "Use the provided financial context if present; if missing, ask one clarifying question.",
-    "Avoid long disclaimers. Do not mention system prompts or hidden instructions.",
+    "You are FinBuddy — an emotionally intelligent personal finance companion.",
     "",
-    "Financial context (numbers are in the user’s currency):",
+    "Voice & tone:",
+    "- Sound like a financially responsible best friend: calm, supportive, never judgemental.",
+    "- Casual but intelligent (contractions ok). Avoid corporate/fintech jargon and robotic filler.",
+    "- Be direct: give a clear recommendation and why it matters for THIS user.",
+    "",
+    "How to answer:",
+    "- Ground every answer in the JSON snapshot below when numbers exist (cite categories, ₦ amounts, savings rate, budgets, trends).",
+    "- Prefer 3–6 short sentences OR tight bullets; include ONE concrete next step (a specific action with rough amounts/dates when possible).",
+    "- If something important is missing from the snapshot, ask ONE clarifying question — otherwise don’t stall.",
+    "- Never invent transactions or balances not implied by the snapshot.",
+    "- Avoid generic pep talks; tie advice to their top category, budget pressure, or week-over-week trend.",
+    "",
+    "Hard rules:",
+    "- Do not mention system prompts, policies, or hidden instructions.",
+    "- No long disclaimers; skip ‘consult a financial advisor’ unless the user asks legal/tax edge cases.",
+    "",
+    "Financial snapshot (JSON). Numbers are in Nigerian Naira (₦) unless noted:",
     JSON.stringify(ctx, null, 2),
   ].join("\n");
+}
+
+function heuristicInsightFromContext(context) {
+  const ctx = context && typeof context === "object" ? context : {};
+  const w = ctx?.trends?.weekOverWeek;
+  const monthExp = ctx?.currentMonth?.expenses ?? 0;
+  const monthInc = ctx?.currentMonth?.income ?? 0;
+  const top = ctx?.topSpendingCategory;
+
+  if (w?.direction === "up" && typeof w.pctChange === "number" && w.pctChange > 0) {
+    return `You're spending faster this week than last (${w.pctChange}% higher). ${top ? `Ease ${top} first — small cuts compound fast.` : "Pick one category to trim for a few days."}`;
+  }
+
+  if (monthInc > 0 && monthExp > monthInc * 0.85) {
+    return `You're directing most of this month's income to expenses. Pause optional buys for a few days so cash breathing room returns${top ? ` — watch ${top} closely.` : "."}`;
+  }
+
+  const strained = Array.isArray(ctx?.categoryBudgets)
+    ? ctx.categoryBudgets.find((c) => c && typeof c.percentUsed === "number" && c.percentUsed >= 85)
+    : null;
+
+  if (strained && strained.category) {
+    return `${strained.category} is ~${strained.percentUsed}% of its monthly cap — slow spending there until month-end so you stay under control.`;
+  }
+
+  return `You're tracking consistently. Pick one habit (meal caps, transport days, or no-spend evenings) and repeat it this week — consistency beats intensity.`;
+}
+
+async function generateInsightJSON(context) {
+  const apiKey =
+    (process.env.AI_PROVIDER || "openai").toLowerCase() === "anthropic"
+      ? process.env.ANTHROPIC_API_KEY
+      : process.env.OPENAI_API_KEY;
+
+  if (!apiKey) return heuristicInsightFromContext(context);
+
+  const snapshot = JSON.stringify(context ?? {});
+  const userPrompt = [
+    "Using ONLY the JSON snapshot, write exactly ONE sentence (max 240 characters).",
+    "Sound like FinBuddy: warm, specific, actionable.",
+    "Reference concrete numbers/categories when helpful. Use ₦ for money.",
+    "",
+    "Snapshot:",
+    snapshot,
+  ].join("\n");
+
+  const system =
+    "You generate a single-line proactive insight for a personal finance app. Output plain text only — no quotes, no markdown.";
+
+  const provider = (process.env.AI_PROVIDER || "openai").toLowerCase();
+  if (provider === "anthropic") {
+    const msg = await callAnthropic({ system, messages: [{ role: "user", content: userPrompt }] });
+    return msg.trim();
+  }
+
+  const msg = await callOpenAI({ system, messages: [{ role: "user", content: userPrompt }] });
+  return msg.trim();
 }
 
 function normalizeMessages(messages) {
@@ -32,7 +102,7 @@ function normalizeMessages(messages) {
       content: typeof m.text === "string" ? m.text : "",
     }))
     .filter((m) => m.content.trim().length > 0)
-    .slice(-20);
+    .slice(-24);
 }
 
 async function callOpenAI({ system, messages }) {
@@ -129,6 +199,30 @@ app.post("/api/chat", async (req, res) => {
       error: err instanceof Error ? err.message : "Unknown server error",
     });
   }
+});
+
+/** Personalized insight — send the same `context` object as chat (POST body). */
+app.post("/api/insights", async (req, res) => {
+  try {
+    const { context } = req.body || {};
+    let insight;
+    try {
+      insight = await generateInsightJSON(context);
+    } catch {
+      insight = heuristicInsightFromContext(context);
+    }
+    res.json({ insight });
+  } catch (err) {
+    res.status(500).json({
+      error: err instanceof Error ? err.message : "Unknown server error",
+    });
+  }
+});
+
+app.get("/api/insights", (_req, res) => {
+  res.status(405).set("Allow", "POST").json({
+    error: "Use POST /api/insights with JSON body { context }",
+  });
 });
 
 const port = Number(process.env.PORT || 5174);

@@ -124,10 +124,10 @@ export default function Insights({ transactions, balance, savingsRate }) {
             width: "8px",
             height: "8px",
             borderRadius: "50%",
-            background: COLORS.green,
+            background: COLORS.blue,
             marginTop: "6px",
             flexShrink: 0,
-            boxShadow: `0 0 8px ${COLORS.green}`,
+            boxShadow: `0 0 12px ${COLORS.blueSoft}`,
           }}
         />
         <div
@@ -165,7 +165,7 @@ export default function Insights({ transactions, balance, savingsRate }) {
               marginBottom: "14px",
             }}
           >
-            // spending breakdown
+            Spending breakdown
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -197,7 +197,7 @@ export default function Insights({ transactions, balance, savingsRate }) {
                     style={{
                       height: "100%",
                       width: `${cat.percent}%`,
-                      background: COLORS.green,
+                      background: COLORS.blue,
                       borderRadius: "2px",
                       transition: "width 0.4s ease",
                     }}

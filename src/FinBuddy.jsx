@@ -1,20 +1,37 @@
 import { useMemo } from "react";
 import { COLORS } from "./styles/colors";
-import { calcTotals, getTopCategory } from "./utils/calcFinance";
+import { calcTotals } from "./utils/calcFinance";
+import { buildBuddyContext } from "./utils/buildBuddyContext";
 import { useTransactions } from "./hooks/useTransactions";
 import BalanceCard from "./components/BalanceCard";
 import Stats from "./components/Stats";
 import TransactionForm from "./components/TransactionForm";
 import TransactionList from "./components/TransactionList";
 import Insights from "./components/Insights";
+import FinBuddyInsightCard from "./components/FinBuddyInsightCard";
 import BuddyChat from "./components/BuddyChat";
 
-const sectionLabel = {
-  fontSize: "11px",
+const fontStack =
+  '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+
+const section = {
+  marginBottom: "2.25rem",
+};
+
+const sectionTitle = {
+  fontSize: "13px",
+  fontWeight: 600,
+  letterSpacing: "-0.02em",
+  color: COLORS.textPrimary,
+  marginBottom: "12px",
+};
+
+const sectionHint = {
+  fontSize: "12px",
   color: COLORS.textSecondary,
-  letterSpacing: "0.12em",
-  textTransform: "uppercase",
-  marginBottom: "10px",
+  marginBottom: "14px",
+  lineHeight: 1.45,
+  maxWidth: "520px",
 };
 
 export default function FinBuddy() {
@@ -23,16 +40,7 @@ export default function FinBuddy() {
     () => calcTotals(transactions),
     [transactions]
   );
-  const topCategory = useMemo(() => getTopCategory(transactions), [transactions]);
-  const buddyContext = useMemo(
-    () => ({
-      balance,
-      topCategory,
-      monthlyExpenses: expense,
-      savingsRate,
-    }),
-    [balance, topCategory, expense, savingsRate]
-  );
+  const buddyContext = useMemo(() => buildBuddyContext(transactions), [transactions]);
 
   return (
     <div
@@ -40,17 +48,17 @@ export default function FinBuddy() {
         minHeight: "100vh",
         background: COLORS.bg,
         color: COLORS.textPrimary,
-        fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+        fontFamily: fontStack,
         margin: 0,
         padding: 0,
+        WebkitFontSmoothing: "antialiased",
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #0a0a0a; }
-        input::placeholder { color: #404040; font-family: 'IBM Plex Mono', monospace; }
-        select option { background: #111; color: #f5f5f5; }
+        body { background: ${COLORS.bg}; }
+        input::placeholder { color: ${COLORS.textMuted}; }
+        select option { background: ${COLORS.surface}; color: ${COLORS.textPrimary}; }
         input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
       `}</style>
 
@@ -58,24 +66,34 @@ export default function FinBuddy() {
         style={{
           maxWidth: "720px",
           margin: "0 auto",
-          padding: "2rem 1.5rem 4rem",
+          padding: "clamp(1.25rem, 4vw, 2rem) clamp(1rem, 4vw, 1.5rem) 3rem",
         }}
       >
-        {/* HEADER */}
-        <div
+        <header
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            marginBottom: "2.5rem",
-            paddingBottom: "1.5rem",
+            gap: "16px",
+            marginBottom: "2rem",
+            paddingBottom: "1.25rem",
             borderBottom: `1px solid ${COLORS.border}`,
           }}
         >
-          <div
-            style={{ fontSize: "22px", fontWeight: "700", letterSpacing: "-0.5px" }}
-          >
-            Fin<span style={{ color: COLORS.green }}>Buddy</span>
+          <div>
+            <div
+              style={{
+                fontSize: "clamp(22px, 5vw, 26px)",
+                fontWeight: 700,
+                letterSpacing: "-0.03em",
+                lineHeight: 1.15,
+              }}
+            >
+              Fin<span style={{ color: COLORS.blue }}>Buddy</span>
+            </div>
+            <div style={{ fontSize: "13px", color: COLORS.textSecondary, marginTop: "6px" }}>
+              Smarter daily money decisions
+            </div>
           </div>
           <div
             style={{
@@ -83,35 +101,53 @@ export default function FinBuddy() {
               color: COLORS.textSecondary,
               background: COLORS.surface,
               border: `1px solid ${COLORS.border}`,
-              borderRadius: "4px",
-              padding: "4px 10px",
-              letterSpacing: "0.1em",
+              borderRadius: "999px",
+              padding: "6px 12px",
+              letterSpacing: "0.06em",
+              fontWeight: 600,
+              boxShadow: COLORS.shadowSm,
             }}
           >
-            PERSONAL FINANCE
+            MVP
           </div>
-        </div>
+        </header>
 
-        <div style={sectionLabel}>// buddy chat</div>
-        <BuddyChat context={buddyContext} />
+        <section style={section} aria-labelledby="summary-heading">
+          <h2 id="summary-heading" style={sectionTitle}>
+            Dashboard
+          </h2>
+          <p style={sectionHint}>Your balance and cash-flow snapshot at a glance.</p>
+          <BalanceCard balance={balance} transactions={transactions} />
+          <Stats income={income} expense={expense} />
+        </section>
 
-        <BalanceCard balance={balance} transactions={transactions} />
-        <Stats income={income} expense={expense} />
+        <section style={section} aria-labelledby="insights-heading">
+          <h2 id="insights-heading" style={sectionTitle}>
+            Insights
+          </h2>
+          <p style={sectionHint}>Patterns, budgets, and where your money went.</p>
+          <FinBuddyInsightCard context={buddyContext} />
+          <Insights transactions={transactions} balance={balance} savingsRate={savingsRate} />
+        </section>
 
-        <div style={sectionLabel}>// add transaction</div>
-        <TransactionForm onAdd={addTransaction} />
+        <section style={section} aria-labelledby="tx-heading">
+          <h2 id="tx-heading" style={sectionTitle}>
+            Transactions
+          </h2>
+          <p style={sectionHint}>Log income and expenses — FinBuddy uses this for advice.</p>
+          <TransactionForm onAdd={addTransaction} />
+          <TransactionList transactions={transactions} onDelete={deleteTransaction} />
+        </section>
 
-        <div style={sectionLabel}>// transactions</div>
-        <TransactionList transactions={transactions} onDelete={deleteTransaction} />
-
-        <div style={sectionLabel}>// insights</div>
-        <Insights
-          transactions={transactions}
-          income={income}
-          expense={expense}
-          balance={balance}
-          savingsRate={savingsRate}
-        />
+        <section style={{ ...section, marginBottom: 0 }} aria-labelledby="chat-heading">
+          <h2 id="chat-heading" style={sectionTitle}>
+            FinBuddy chat
+          </h2>
+          <p style={sectionHint}>
+            Ask what to do next — answers use your live numbers from this session.
+          </p>
+          <BuddyChat context={buddyContext} />
+        </section>
       </div>
     </div>
   );

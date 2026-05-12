@@ -24,6 +24,7 @@ export default function BalanceCard({ balance, transactions }) {
         marginBottom: "12px",
         position: "relative",
         overflow: "hidden",
+        boxShadow: COLORS.shadowSm,
       }}
     >
       {/* green glow blob */}
@@ -34,7 +35,7 @@ export default function BalanceCard({ balance, transactions }) {
           right: "-60px",
           width: "200px",
           height: "200px",
-          background: COLORS.greenGlow,
+          background: COLORS.blueSoft,
           borderRadius: "50%",
           pointerEvents: "none",
         }}
@@ -47,9 +48,10 @@ export default function BalanceCard({ balance, transactions }) {
           letterSpacing: "0.12em",
           textTransform: "uppercase",
           marginBottom: "8px",
+          fontWeight: 600,
         }}
       >
-        // total balance
+        Total balance
       </div>
 
       <div

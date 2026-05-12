@@ -8,7 +8,7 @@ const inputStyle = {
   borderRadius: "8px",
   padding: "0 12px",
   fontSize: "13px",
-  fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+  fontFamily: "inherit",
   color: COLORS.textPrimary,
   outline: "none",
   width: "100%",
@@ -37,8 +37,8 @@ export default function TransactionForm({ onAdd }) {
   }
 
   function focusStyle(e) {
-    e.target.style.borderColor = COLORS.green;
-    e.target.style.boxShadow = `0 0 0 2px ${COLORS.greenGlow}`;
+    e.target.style.borderColor = COLORS.blue;
+    e.target.style.boxShadow = `0 0 0 3px ${COLORS.blueSoft}`;
   }
 
   function blurStyle(e) {
@@ -137,19 +137,19 @@ export default function TransactionForm({ onAdd }) {
       <button
         style={{
           height: "42px",
-          background: COLORS.green,
-          color: "#000",
+          background: COLORS.blue,
+          color: "#ffffff",
           border: "none",
           borderRadius: "8px",
           fontSize: "13px",
           fontWeight: "700",
-          fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
-          letterSpacing: "0.05em",
+          fontFamily: "inherit",
+          letterSpacing: "0.02em",
           cursor: "pointer",
         }}
         onClick={handleAdd}
-        onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.greenDark)}
-        onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.green)}
+        onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.blueDark)}
+        onMouseLeave={(e) => (e.currentTarget.style.background = COLORS.blue)}
         onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
         onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
       >
