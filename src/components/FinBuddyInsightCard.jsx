@@ -1,71 +1,12 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useTheme } from "../context/useTheme";
+import { getPrimaryProactiveInsight } from "../utils/proactiveInsights";
+import { IconSparkles } from "./icons";
 
-async function fetchInsight(context) {
-  const res = await fetch("/api/insights", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ context }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const msg = typeof data?.error === "string" ? data.error : `Request failed (${res.status})`;
-    throw new Error(msg);
-  }
-  if (typeof data?.insight !== "string") throw new Error("Bad insight response");
-  return data.insight;
-}
-
-function heuristicInsight(context) {
-  const w = context?.trends?.weekOverWeek;
-  const monthExp = context?.currentMonth?.expenses ?? 0;
-  const monthInc = context?.currentMonth?.income ?? 0;
-  const top = context?.topSpendingCategory;
-
-  if (w?.direction === "up" && typeof w.pctChange === "number" && w.pctChange > 0) {
-    return `You're spending faster this week than last (${w.pctChange}% higher). ${top ? `Tighten ${top} first — small cuts compound.` : "Pick one category to trim for a few days."}`;
-  }
-
-  if (monthInc > 0 && monthExp > monthInc * 0.85) {
-    return `You're using most of this month's income on expenses. Pause optional buys for a few days so your balance stays healthy${top ? ` — especially ${top}.` : "."}`;
-  }
-
-  const strained = context?.categoryBudgets?.find((c) => c.percentUsed >= 85);
-  if (strained) {
-    return `${strained.category} is at ~${strained.percentUsed}% of its monthly cap. Slow spending there until month-end so you stay under ₦${strained.monthlyLimit.toLocaleString("en-NG")}.`;
-  }
-
-  return `You're tracking consistently. Next step: pick one habit (meal caps, transport days, or no-spend evenings) and repeat it this week.`;
-}
-
-export default function FinBuddyInsightCard({ context }) {
+/** Locally computed proactive insight — no network calls. */
+export default function FinBuddyInsightCard({ transactions }) {
   const { colors: COLORS } = useTheme();
-  const [text, setText] = useState(() => heuristicInsight(context));
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function run() {
-      setLoading(true);
-      setError(null);
-      try {
-        const insight = await fetchInsight(context);
-        if (!cancelled) setText(insight.trim());
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Could not load insight");
-          setText(heuristicInsight(context));
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    run();
-    return () => {
-      cancelled = true;
-    };
-  }, [context]);
+  const insight = useMemo(() => getPrimaryProactiveInsight(transactions), [transactions]);
 
   return (
     <div
@@ -82,11 +23,11 @@ export default function FinBuddyInsightCard({ context }) {
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
-          gap: "12px",
+          gap: "10px",
           marginBottom: "10px",
         }}
       >
+        <IconSparkles size={18} color={COLORS.green} />
         <div
           style={{
             fontSize: "11px",
@@ -96,11 +37,8 @@ export default function FinBuddyInsightCard({ context }) {
             fontWeight: 600,
           }}
         >
-          FinBuddy insight
+          Proactive insight
         </div>
-        {loading && (
-          <div style={{ fontSize: "11px", color: COLORS.blue, fontWeight: 600 }}>Updating…</div>
-        )}
       </div>
       <p
         style={{
@@ -112,13 +50,8 @@ export default function FinBuddyInsightCard({ context }) {
           letterSpacing: "-0.01em",
         }}
       >
-        {text}
+        {insight}
       </p>
-      {error && (
-        <p style={{ margin: "10px 0 0", fontSize: "12px", color: COLORS.textSecondary }}>
-          Showing offline insight ({error})
-        </p>
-      )}
     </div>
   );
 }

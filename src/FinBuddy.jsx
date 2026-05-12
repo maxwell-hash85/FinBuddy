@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTheme } from "./context/useTheme";
-import { calcTotals } from "./utils/calcFinance";
+import { calcTotals, getTopCategory, getSpendingByCategory } from "./utils/calcFinance";
 import { buildBuddyContext } from "./utils/buildBuddyContext";
 import { useTransactions } from "./hooks/useTransactions";
 import BalanceCard from "./components/BalanceCard";
@@ -9,10 +9,20 @@ import TransactionForm from "./components/TransactionForm";
 import TransactionList from "./components/TransactionList";
 import Insights from "./components/Insights";
 import FinBuddyInsightCard from "./components/FinBuddyInsightCard";
+import TopCategoryStrip from "./components/TopCategoryStrip";
+import Charts from "./components/Charts";
 import BuddyChat from "./components/BuddyChat";
+import { IconMoon, IconSun } from "./components/icons";
 
 const fontStack =
   '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+
+function greetingPrefix() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 export default function FinBuddy() {
   const { mode, toggleTheme, colors: COLORS } = useTheme();
@@ -22,6 +32,12 @@ export default function FinBuddy() {
     [transactions]
   );
   const buddyContext = useMemo(() => buildBuddyContext(transactions), [transactions]);
+  const spendingBreakdown = useMemo(() => getSpendingByCategory(transactions), [transactions]);
+  const topCategory = useMemo(() => getTopCategory(transactions), [transactions]);
+  const topBreakdownEntry = useMemo(
+    () => spendingBreakdown.find((x) => x.name === topCategory),
+    [spendingBreakdown, topCategory]
+  );
 
   const sectionTitle = {
     fontSize: "13px",
@@ -42,6 +58,8 @@ export default function FinBuddy() {
   const section = {
     marginBottom: "2.25rem",
   };
+
+  const greeting = greetingPrefix();
 
   return (
     <div
@@ -95,7 +113,7 @@ export default function FinBuddy() {
               Fin<span style={{ color: COLORS.green }}>Buddy</span>
             </div>
             <div style={{ fontSize: "13px", color: COLORS.textSecondary, marginTop: "6px" }}>
-              Smarter daily money decisions
+              Your AI finance companion
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
@@ -121,9 +139,11 @@ export default function FinBuddy() {
                 transition: "transform 0.08s ease, border-color 0.2s ease",
               }}
             >
-              <span aria-hidden style={{ fontSize: "14px", lineHeight: 1 }}>
-                {mode === "dark" ? "🌙" : "☀️"}
-              </span>
+              {mode === "dark" ? (
+                <IconMoon size={16} color={COLORS.textSecondary} />
+              ) : (
+                <IconSun size={16} color={COLORS.amber} />
+              )}
               <span>{mode === "dark" ? "Dark" : "Light"}</span>
             </button>
             <div
@@ -144,41 +164,71 @@ export default function FinBuddy() {
           </div>
         </header>
 
-        <section style={section} aria-labelledby="summary-heading">
-          <h2 id="summary-heading" style={sectionTitle}>
-            Dashboard
+        {/* SECTION 1 — Overview */}
+        <section style={section} aria-labelledby="overview-heading">
+          <h2 id="overview-heading" style={sectionTitle}>
+            Overview
           </h2>
-          <p style={sectionHint}>Your balance and cash-flow snapshot at a glance.</p>
+          <p style={{ ...sectionHint, fontSize: "15px", fontWeight: 500, color: COLORS.textPrimary }}>
+            {greeting} — here&apos;s your money snapshot.
+          </p>
+          <p style={sectionHint}>Balance and cash flow at a glance.</p>
           <BalanceCard balance={balance} transactions={transactions} />
           <Stats income={income} expense={expense} />
         </section>
 
+        {/* SECTION 2 — Insights */}
         <section style={section} aria-labelledby="insights-heading">
           <h2 id="insights-heading" style={sectionTitle}>
             Insights
           </h2>
-          <p style={sectionHint}>Patterns, budgets, and where your money went.</p>
-          <FinBuddyInsightCard context={buddyContext} />
+          <p style={sectionHint}>Patterns, alerts, and category breakdown.</p>
           <Insights transactions={transactions} balance={balance} savingsRate={savingsRate} />
+          <TopCategoryStrip
+            topCategory={topCategory}
+            topCategoryAmount={topBreakdownEntry?.amount ?? 0}
+            topCategoryPercent={topBreakdownEntry?.percent}
+          />
+          <FinBuddyInsightCard transactions={transactions} />
         </section>
 
+        {/* SECTION 3 — Transactions */}
         <section style={section} aria-labelledby="tx-heading">
           <h2 id="tx-heading" style={sectionTitle}>
             Transactions
           </h2>
-          <p style={sectionHint}>Log income and expenses — FinBuddy uses this for advice.</p>
+          <p style={sectionHint}>Log income and expenses — FinBuddy uses this for coaching.</p>
           <TransactionForm onAdd={addTransaction} />
           <TransactionList transactions={transactions} onDelete={deleteTransaction} />
         </section>
 
+        {/* SECTION 4 — Charts */}
+        <section style={section} aria-labelledby="charts-heading">
+          <h2 id="charts-heading" style={sectionTitle}>
+            Charts
+          </h2>
+          <p style={sectionHint}>Visual split of where spending goes.</p>
+          <Charts transactions={transactions} />
+        </section>
+
+        {/* SECTION 5 — FinBuddy chat */}
         <section style={{ ...section, marginBottom: 0 }} aria-labelledby="chat-heading">
           <h2 id="chat-heading" style={sectionTitle}>
-            FinBuddy chat
+            FinBuddy AI chat
           </h2>
           <p style={sectionHint}>
-            Ask what to do next — answers use your live numbers from this session.
+            Ask about spending, savings, or purchases — answers use your numbers on this page.
           </p>
-          <BuddyChat context={buddyContext} />
+          <BuddyChat
+            balance={balance}
+            savingsRate={savingsRate}
+            transactions={transactions}
+            topCategory={topCategory}
+            spendingBreakdown={spendingBreakdown}
+            income={income}
+            expense={expense}
+            context={buddyContext}
+          />
         </section>
       </div>
     </div>

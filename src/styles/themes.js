@@ -34,7 +34,7 @@ const dark = {
 };
 
 const light = {
-  bg: "#ececef",
+  bg: "#f5f5f7",
   surface: "#ffffff",
   surfaceHover: "#f4f4f5",
   border: "#d4d4d8",

@@ -1,5 +1,24 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useTheme } from "../context/useTheme";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { simulateBuddyReply } from "../utils/buddySimulation";
+import { IconSend, IconSparkles } from "./icons";
+
+/** iMessage-style dark chat chrome (fixed look regardless of app theme). */
+const CHAT = {
+  shell: "#0d0d0f",
+  headerBg: "#141416",
+  messagesBg: "#000000",
+  buddyBubble: "#2c2c2e",
+  userBubble: "#2563eb",
+  textOnDark: "#f5f5f7",
+  textMuted: "#8e8e93",
+  borderSubtle: "rgba(255,255,255,0.1)",
+  inputBg: "#1c1c1e",
+  typingDot: "#a1a1a6",
+};
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
 
 function formatTime(ts) {
   try {
@@ -9,62 +28,63 @@ function formatTime(ts) {
   }
 }
 
-function makeFakeReply(text) {
-  const t = (text || "").trim().toLowerCase();
-  if (!t) return "Say something and I’ll respond.";
-
-  if (t.includes("hello") || t.includes("hi") || t.includes("hey")) {
-    return "Hey — I’m FinBuddy. Tell me what you spent today and I’ll help you stay on track.";
-  }
-
-  if (t.includes("budget") || t.includes("plan")) {
-    return "Got it. Quick win: pick one category to cap this week (food, shopping, etc.). What’s the one you want to control?";
-  }
-
-  if (t.includes("spent") || t.includes("expense") || t.includes("cost")) {
-    return "Noted. Tell me which category feels leakiest — we’ll tighten it with one concrete rule.";
-  }
-
-  if (t.includes("save") || t.includes("savings")) {
-    return "Nice. Small, repeatable moves win. What’s your goal this month: save more, spend less, or both?";
-  }
-
-  return "I’m here. Tell me what you want to improve this month and I’ll give you one clear next action.";
-}
-
 async function fetchBuddyReply({ messages, context }) {
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ messages, context }),
   });
-
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const msg = typeof data?.error === "string" ? data.error : `Request failed (${res.status})`;
     throw new Error(msg);
   }
-
   if (typeof data?.text !== "string") throw new Error("Bad response from server");
   return data.text;
 }
 
-export default function BuddyChat({ context }) {
-  const { colors: COLORS } = useTheme();
+/**
+ * FinBuddy chat — simulation-first using live financial props.
+ * Set `VITE_CHAT_USE_API=true` to try `/api/chat` first, then fall back to simulation.
+ */
+export default function BuddyChat({
+  balance,
+  savingsRate,
+  transactions,
+  topCategory,
+  spendingBreakdown,
+  income,
+  expense,
+  context,
+}) {
+  const useApi = import.meta.env.VITE_CHAT_USE_API === "true";
+
+  const simProps = useMemo(
+    () => ({
+      balance,
+      savingsRate,
+      transactions,
+      topCategory,
+      spendingBreakdown,
+      income,
+      expense,
+    }),
+    [balance, savingsRate, transactions, topCategory, spendingBreakdown, income, expense]
+  );
+
   const [messages, setMessages] = useState(() => {
     const at = Date.now();
     return [
       {
         id: "seed-1",
         role: "buddy",
-        text: "I’m FinBuddy — ask me anything about your spending. I’ll use your live totals and categories from this session.",
+        text: "I’m FinBuddy — ask about spending, savings, or whether something’s worth buying. I’m using your live numbers from this page.",
         at,
       },
     ];
   });
   const [draft, setDraft] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [status, setStatus] = useState({ mode: "ui", error: null });
   const listRef = useRef(null);
 
   const canSend = useMemo(() => draft.trim().length > 0 && !isTyping, [draft, isTyping]);
@@ -74,6 +94,20 @@ export default function BuddyChat({ context }) {
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [messages, isTyping]);
+
+  const resolveReply = useCallback(
+    async (userText, recentPayload) => {
+      if (useApi && context) {
+        try {
+          return await fetchBuddyReply({ messages: recentPayload, context });
+        } catch {
+          /* fall through to simulation */
+        }
+      }
+      return simulateBuddyReply(userText, simProps);
+    },
+    [useApi, context, simProps]
+  );
 
   async function send() {
     const text = draft.trim();
@@ -85,46 +119,31 @@ export default function BuddyChat({ context }) {
     setMessages((prev) => [...prev, userMsg]);
 
     setIsTyping(true);
-    setStatus((s) => ({ ...s, error: null }));
 
     const recent = [...messages, userMsg].slice(-24).map((m) => ({
       role: m.role === "user" ? "user" : "assistant",
       text: m.text,
     }));
 
-    try {
-      const replyText = await fetchBuddyReply({ messages: recent, context });
-      const botAt = Date.now();
-      setMessages((prev) => [...prev, { id: `b-${botAt}`, role: "buddy", text: replyText, at: botAt }]);
-      setStatus({ mode: "ai", error: null });
-    } catch (err) {
-      const replyText = makeFakeReply(text);
-      const botAt = Date.now();
-      window.setTimeout(() => {
-        setMessages((prev) => [...prev, { id: `b-${botAt}`, role: "buddy", text: replyText, at: botAt }]);
-        setIsTyping(false);
-      }, 450);
-      setStatus({
-        mode: "ui",
-        error: err instanceof Error ? err.message : "AI request failed",
-      });
-      return;
-    }
+    await sleep(420);
+    const replyText = await resolveReply(text, recent);
+    const botAt = Date.now();
+    setMessages((prev) => [...prev, { id: `b-${botAt}`, role: "buddy", text: replyText, at: botAt }]);
     setIsTyping(false);
   }
 
   return (
     <div
       style={{
-        background: COLORS.surface,
-        border: `1px solid ${COLORS.border}`,
+        background: CHAT.shell,
+        border: `1px solid ${CHAT.borderSubtle}`,
         borderRadius: "18px",
         overflow: "hidden",
-        boxShadow: COLORS.shadowChat,
+        boxShadow: "0 20px 50px rgba(0,0,0,0.45)",
       }}
     >
       <style>{`
-        @keyframes fbDot {
+        @keyframes fbDotDark {
           0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
           40% { opacity: 1; transform: translateY(-2px); }
         }
@@ -132,75 +151,59 @@ export default function BuddyChat({ context }) {
 
       <div
         style={{
-          padding: "1rem 1.25rem",
-          borderBottom: `1px solid ${COLORS.border}`,
+          padding: "14px 16px",
+          borderBottom: `1px solid ${CHAT.borderSubtle}`,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: "10px",
-          background: COLORS.surface,
+          gap: "12px",
+          background: CHAT.headerBg,
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: 0 }}>
-          <div style={{ fontSize: "14px", fontWeight: 700, color: COLORS.textPrimary, letterSpacing: "-0.02em" }}>
-            FinBuddy
-          </div>
-          <div style={{ fontSize: "12px", color: COLORS.textSecondary, lineHeight: 1.35 }}>
-            {status.mode === "ai" ? "Connected — answers use your numbers" : "Offline demo mode"}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+          <IconSparkles size={20} color="#10b981" />
+          <div style={{ minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: "15px",
+                fontWeight: 700,
+                color: CHAT.textOnDark,
+                letterSpacing: "-0.02em",
+              }}
+            >
+              FinBuddy
+            </div>
+            <div style={{ fontSize: "11px", color: CHAT.textMuted, marginTop: "2px" }}>
+              {useApi ? "Try API first · falls back to smart replies" : "Smart replies · uses your live totals"}
+            </div>
           </div>
         </div>
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            fontSize: "11px",
-            color: COLORS.textSecondary,
+            fontSize: "10px",
             fontWeight: 600,
-            flexShrink: 0,
+            letterSpacing: "0.06em",
+            color: CHAT.textMuted,
+            border: `1px solid ${CHAT.borderSubtle}`,
+            borderRadius: "999px",
+            padding: "4px 10px",
           }}
         >
-          <span
-            style={{
-              width: "8px",
-              height: "8px",
-              borderRadius: "50%",
-              background: status.error ? COLORS.amber : COLORS.green,
-              boxShadow: status.error ? "none" : `0 0 0 4px ${COLORS.greenGlow}`,
-              display: "inline-block",
-            }}
-          />
-          {status.error ? "Degraded" : "Ready"}
+          CHAT
         </div>
       </div>
-
-      {status.error && (
-        <div
-          style={{
-            padding: "10px 1.25rem",
-            borderBottom: `1px solid ${COLORS.border}`,
-            background: COLORS.redSoft,
-            color: COLORS.textSecondary,
-            fontSize: "12px",
-            lineHeight: "1.5",
-          }}
-        >
-          AI unavailable — using offline replies:{" "}
-          <span style={{ color: COLORS.textPrimary, fontWeight: 600 }}>{status.error}</span>
-        </div>
-      )}
 
       <div
         ref={listRef}
         style={{
-          padding: "1rem 1.25rem",
+          padding: "14px 16px",
           display: "flex",
           flexDirection: "column",
           gap: "12px",
           minHeight: "min(52vh, 380px)",
           maxHeight: "min(52vh, 380px)",
           overflowY: "auto",
-          background: COLORS.bg,
+          background: CHAT.messagesBg,
         }}
       >
         {messages.map((m) => {
@@ -219,20 +222,25 @@ export default function BuddyChat({ context }) {
                 style={{
                   maxWidth: "88%",
                   padding: "11px 14px",
-                  borderRadius: isUser ? "18px 18px 6px 18px" : "18px 18px 18px 6px",
-                  border: `1px solid ${isUser ? COLORS.border : COLORS.blueStroke}`,
+                  borderRadius: isUser ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                  border: `1px solid ${isUser ? "transparent" : CHAT.borderSubtle}`,
                   fontSize: "14px",
                   lineHeight: 1.55,
                   whiteSpace: "pre-wrap",
                   wordBreak: "break-word",
-                  background: isUser ? COLORS.surface : COLORS.blueSoft,
-                  color: COLORS.textPrimary,
-                  boxShadow: isUser ? COLORS.shadowSm : "none",
+                  background: isUser ? CHAT.userBubble : CHAT.buddyBubble,
+                  color: CHAT.textOnDark,
                 }}
               >
                 {m.text}
               </div>
-              <div style={{ fontSize: "11px", color: COLORS.textMuted, padding: isUser ? "0 6px 0 0" : "0 0 0 6px" }}>
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: CHAT.textMuted,
+                  padding: isUser ? "0 6px 0 0" : "0 0 0 6px",
+                }}
+              >
                 {typeof m.at === "number" ? formatTime(m.at) : ""}
               </div>
             </div>
@@ -245,14 +253,14 @@ export default function BuddyChat({ context }) {
               style={{
                 padding: "10px 14px",
                 borderRadius: "18px",
-                border: `1px solid ${COLORS.blueStroke}`,
-                background: COLORS.surface,
+                border: `1px solid ${CHAT.borderSubtle}`,
+                background: CHAT.buddyBubble,
                 display: "flex",
                 alignItems: "center",
                 gap: "6px",
               }}
             >
-              <span style={{ fontSize: "12px", color: COLORS.textSecondary, marginRight: "6px" }}>FinBuddy</span>
+              <span style={{ fontSize: "12px", color: CHAT.textMuted, marginRight: "4px" }}>FinBuddy</span>
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
@@ -260,8 +268,8 @@ export default function BuddyChat({ context }) {
                     width: "6px",
                     height: "6px",
                     borderRadius: "50%",
-                    background: COLORS.blue,
-                    animation: `fbDot 1.2s infinite`,
+                    background: CHAT.typingDot,
+                    animation: `fbDotDark 1.2s infinite`,
                     animationDelay: `${i * 0.15}s`,
                   }}
                 />
@@ -273,9 +281,9 @@ export default function BuddyChat({ context }) {
 
       <div
         style={{
-          padding: "0.85rem 1rem",
-          borderTop: `1px solid ${COLORS.border}`,
-          background: COLORS.surface,
+          padding: "12px 14px",
+          borderTop: `1px solid ${CHAT.borderSubtle}`,
+          background: CHAT.headerBg,
           display: "flex",
           gap: "10px",
           alignItems: "center",
@@ -287,15 +295,15 @@ export default function BuddyChat({ context }) {
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) send();
           }}
-          placeholder="Ask FinBuddy…"
+          placeholder="Message FinBuddy…"
           aria-label="Message FinBuddy"
           style={{
             flex: 1,
-            background: COLORS.bg,
-            border: `1px solid ${COLORS.border}`,
+            background: CHAT.inputBg,
+            border: `1px solid ${CHAT.borderSubtle}`,
             borderRadius: "12px",
             padding: "12px 14px",
-            color: COLORS.textPrimary,
+            color: CHAT.textOnDark,
             outline: "none",
             fontSize: "14px",
             fontFamily: "inherit",
@@ -305,20 +313,22 @@ export default function BuddyChat({ context }) {
           type="button"
           onClick={send}
           disabled={!canSend}
+          aria-label="Send message"
           style={{
-            background: canSend ? COLORS.blue : COLORS.border,
-            border: `1px solid ${canSend ? COLORS.blueDark : COLORS.border}`,
-            color: canSend ? "#ffffff" : COLORS.textMuted,
-            padding: "12px 14px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "46px",
+            height: "46px",
+            flexShrink: 0,
+            background: canSend ? CHAT.userBubble : "#3a3a3c",
+            border: `1px solid ${canSend ? "#1d4ed8" : CHAT.borderSubtle}`,
             borderRadius: "12px",
-            fontSize: "13px",
-            fontWeight: 700,
             cursor: canSend ? "pointer" : "not-allowed",
-            fontFamily: "inherit",
-            transition: "background 0.15s ease, transform 0.08s ease",
+            transition: "opacity 0.15s ease, transform 0.08s ease",
           }}
         >
-          Send
+          <IconSend size={20} color={canSend ? "#ffffff" : CHAT.textMuted} />
         </button>
       </div>
     </div>
