@@ -1,12 +1,13 @@
 import { useMemo } from "react";
 import { COLORS } from "./styles/colors";
-import { calcTotals } from "./utils/calcFinance";
+import { calcTotals, getTopCategory } from "./utils/calcFinance";
 import { useTransactions } from "./hooks/useTransactions";
 import BalanceCard from "./components/BalanceCard";
 import Stats from "./components/Stats";
 import TransactionForm from "./components/TransactionForm";
 import TransactionList from "./components/TransactionList";
 import Insights from "./components/Insights";
+import BuddyChat from "./components/BuddyChat";
 
 const sectionLabel = {
   fontSize: "11px",
@@ -21,6 +22,16 @@ export default function FinBuddy() {
   const { income, expense, balance, savingsRate } = useMemo(
     () => calcTotals(transactions),
     [transactions]
+  );
+  const topCategory = useMemo(() => getTopCategory(transactions), [transactions]);
+  const buddyContext = useMemo(
+    () => ({
+      balance,
+      topCategory,
+      monthlyExpenses: expense,
+      savingsRate,
+    }),
+    [balance, topCategory, expense, savingsRate]
   );
 
   return (
@@ -80,6 +91,9 @@ export default function FinBuddy() {
             PERSONAL FINANCE
           </div>
         </div>
+
+        <div style={sectionLabel}>// buddy chat</div>
+        <BuddyChat context={buddyContext} />
 
         <BalanceCard balance={balance} transactions={transactions} />
         <Stats income={income} expense={expense} />

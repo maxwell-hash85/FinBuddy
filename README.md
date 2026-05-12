@@ -1,16 +1,25 @@
-# React + Vite
+# FinBuddy
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+FinBuddy is a lightweight personal finance tracker with an AI buddy chat layer.
 
-Currently, two official plugins are available:
+## Run locally
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Install dependencies:
 
-## React Compiler
+```bash
+npm install
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Create a `.env` file (copy from `.env.example`) and set **one** provider key:
 
-## Expanding the ESLint configuration
+- **OpenAI**: set `OPENAI_API_KEY` (default, `AI_PROVIDER=openai`)
+- **Anthropic (Claude)**: set `ANTHROPIC_API_KEY` and `AI_PROVIDER=anthropic`
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Start UI + API together:
+
+```bash
+npm run dev
+```
+
+- UI: Vite dev server
+- API: `http://localhost:5174` (proxied from the UI via `/api/*`)
