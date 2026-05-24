@@ -1,8 +1,13 @@
 import { useMemo } from "react";
 import { useTheme } from "./context/useTheme";
-import { calcTotals, getTopCategory, getSpendingByCategory } from "./utils/calcFinance";
+import {
+  calcTotals,
+  getTopCategory,
+  getSpendingByCategory,
+} from "./utils/calcFinance";
 import { buildBuddyContext } from "./utils/buildBuddyContext";
 import { useTransactions } from "./hooks/useTransactions";
+
 import BalanceCard from "./components/BalanceCard";
 import Stats from "./components/Stats";
 import TransactionForm from "./components/TransactionForm";
@@ -12,28 +17,49 @@ import FinBuddyInsightCard from "./components/FinBuddyInsightCard";
 import TopCategoryStrip from "./components/TopCategoryStrip";
 import Charts from "./components/Charts";
 import BuddyChat from "./components/BuddyChat";
+
 import { IconMoon, IconSun } from "./components/icons";
+
+import logo from "./assets/finbuddy_favicon.png";
 
 const fontStack =
   '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
 function greetingPrefix() {
   const h = new Date().getHours();
+
   if (h < 12) return "Good morning";
   if (h < 17) return "Good afternoon";
+
   return "Good evening";
 }
 
 export default function FinBuddy() {
   const { mode, toggleTheme, colors: COLORS } = useTheme();
-  const { transactions, addTransaction, deleteTransaction } = useTransactions();
+
+  const { transactions, addTransaction, deleteTransaction } =
+    useTransactions();
+
   const { income, expense, balance, savingsRate } = useMemo(
     () => calcTotals(transactions),
     [transactions]
   );
-  const buddyContext = useMemo(() => buildBuddyContext(transactions), [transactions]);
-  const spendingBreakdown = useMemo(() => getSpendingByCategory(transactions), [transactions]);
-  const topCategory = useMemo(() => getTopCategory(transactions), [transactions]);
+
+  const buddyContext = useMemo(
+    () => buildBuddyContext(transactions),
+    [transactions]
+  );
+
+  const spendingBreakdown = useMemo(
+    () => getSpendingByCategory(transactions),
+    [transactions]
+  );
+
+  const topCategory = useMemo(
+    () => getTopCategory(transactions),
+    [transactions]
+  );
+
   const topBreakdownEntry = useMemo(
     () => spendingBreakdown.find((x) => x.name === topCategory),
     [spendingBreakdown, topCategory]
@@ -75,20 +101,39 @@ export default function FinBuddy() {
       }}
     >
       <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: ${COLORS.bg}; }
-        input::placeholder { color: ${COLORS.textMuted}; }
-        select option { background: ${COLORS.surface}; color: ${COLORS.textPrimary}; }
-        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
+
+        body {
+          background: ${COLORS.bg};
+        }
+
+        input::placeholder {
+          color: ${COLORS.textMuted};
+        }
+
+        select option {
+          background: ${COLORS.surface};
+          color: ${COLORS.textPrimary};
+        }
+
+        input[type=number]::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+        }
       `}</style>
 
       <div
         style={{
           maxWidth: "720px",
           margin: "0 auto",
-          padding: "clamp(1.25rem, 4vw, 2rem) clamp(1rem, 4vw, 1.5rem) 3rem",
+          padding:
+            "clamp(1.25rem, 4vw, 2rem) clamp(1rem, 4vw, 1.5rem) 3rem",
         }}
       >
+        {/* HEADER */}
         <header
           style={{
             display: "flex",
@@ -101,26 +146,68 @@ export default function FinBuddy() {
             flexWrap: "wrap",
           }}
         >
-          <div>
-            <div
+          {/* LEFT SIDE */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "14px",
+            }}
+          >
+            {/* LOGO */}
+            <img
+              src={logo}
+              alt="FinBuddy Logo"
               style={{
-                fontSize: "clamp(22px, 5vw, 26px)",
-                fontWeight: 700,
-                letterSpacing: "-0.03em",
-                lineHeight: 1.15,
+                width: "48px",
+                height: "48px",
+                objectFit: "contain",
+                borderRadius: "12px",
               }}
-            >
-              Fin<span style={{ color: COLORS.green }}>Buddy</span>
-            </div>
-            <div style={{ fontSize: "13px", color: COLORS.textSecondary, marginTop: "6px" }}>
-              Your AI finance companion
+            />
+
+            {/* BRANDING */}
+            <div>
+              <div
+                style={{
+                  fontSize: "clamp(22px, 5vw, 26px)",
+                  fontWeight: 700,
+                  letterSpacing: "-0.03em",
+                  lineHeight: 1.15,
+                }}
+              >
+                Fin<span style={{ color: COLORS.green }}>Buddy</span>
+              </div>
+
+              <div
+                style={{
+                  fontSize: "13px",
+                  color: COLORS.textSecondary,
+                  marginTop: "6px",
+                }}
+              >
+                Your AI finance companion
+              </div>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+
+          {/* RIGHT SIDE */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              flexShrink: 0,
+            }}
+          >
             <button
               type="button"
               onClick={toggleTheme}
-              aria-label={mode === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              aria-label={
+                mode === "dark"
+                  ? "Switch to light theme"
+                  : "Switch to dark theme"
+              }
               title={mode === "dark" ? "Light theme" : "Dark theme"}
               style={{
                 display: "flex",
@@ -136,7 +223,8 @@ export default function FinBuddy() {
                 fontWeight: 600,
                 fontFamily: "inherit",
                 boxShadow: COLORS.shadowSm,
-                transition: "transform 0.08s ease, border-color 0.2s ease",
+                transition:
+                  "transform 0.08s ease, border-color 0.2s ease",
               }}
             >
               {mode === "dark" ? (
@@ -144,8 +232,10 @@ export default function FinBuddy() {
               ) : (
                 <IconSun size={16} color={COLORS.amber} />
               )}
+
               <span>{mode === "dark" ? "Dark" : "Light"}</span>
             </button>
+
             <div
               style={{
                 fontSize: "11px",
@@ -164,61 +254,111 @@ export default function FinBuddy() {
           </div>
         </header>
 
-        {/* SECTION 1 — Overview */}
+        {/* SECTION 1 — OVERVIEW */}
         <section style={section} aria-labelledby="overview-heading">
           <h2 id="overview-heading" style={sectionTitle}>
             Overview
           </h2>
-          <p style={{ ...sectionHint, fontSize: "15px", fontWeight: 500, color: COLORS.textPrimary }}>
+
+          <p
+            style={{
+              ...sectionHint,
+              fontSize: "15px",
+              fontWeight: 500,
+              color: COLORS.textPrimary,
+            }}
+          >
             {greeting} — here&apos;s your money snapshot.
           </p>
-          <p style={sectionHint}>Balance and cash flow at a glance.</p>
-          <BalanceCard balance={balance} transactions={transactions} />
+
+          <p style={sectionHint}>
+            Balance and cash flow at a glance.
+          </p>
+
+          <BalanceCard
+            balance={balance}
+            transactions={transactions}
+          />
+
           <Stats income={income} expense={expense} />
         </section>
 
-        {/* SECTION 2 — Insights */}
+        {/* SECTION 2 — INSIGHTS */}
         <section style={section} aria-labelledby="insights-heading">
           <h2 id="insights-heading" style={sectionTitle}>
             Insights
           </h2>
-          <p style={sectionHint}>Patterns, alerts, and category breakdown.</p>
-          <Insights transactions={transactions} balance={balance} savingsRate={savingsRate} />
+
+          <p style={sectionHint}>
+            Patterns, alerts, and category breakdown.
+          </p>
+
+          <Insights
+            transactions={transactions}
+            balance={balance}
+            savingsRate={savingsRate}
+          />
+
           <TopCategoryStrip
             topCategory={topCategory}
             topCategoryAmount={topBreakdownEntry?.amount ?? 0}
             topCategoryPercent={topBreakdownEntry?.percent}
           />
-          <FinBuddyInsightCard transactions={transactions} />
+
+          <FinBuddyInsightCard
+            transactions={transactions}
+          />
         </section>
 
-        {/* SECTION 3 — Transactions */}
+        {/* SECTION 3 — TRANSACTIONS */}
         <section style={section} aria-labelledby="tx-heading">
           <h2 id="tx-heading" style={sectionTitle}>
             Transactions
           </h2>
-          <p style={sectionHint}>Log income and expenses — FinBuddy uses this for coaching.</p>
+
+          <p style={sectionHint}>
+            Log income and expenses — FinBuddy uses this for
+            coaching.
+          </p>
+
           <TransactionForm onAdd={addTransaction} />
-          <TransactionList transactions={transactions} onDelete={deleteTransaction} />
+
+          <TransactionList
+            transactions={transactions}
+            onDelete={deleteTransaction}
+          />
         </section>
 
-        {/* SECTION 4 — Charts */}
+        {/* SECTION 4 — CHARTS */}
         <section style={section} aria-labelledby="charts-heading">
           <h2 id="charts-heading" style={sectionTitle}>
             Charts
           </h2>
-          <p style={sectionHint}>Visual split of where spending goes.</p>
+
+          <p style={sectionHint}>
+            Visual split of where spending goes.
+          </p>
+
           <Charts transactions={transactions} />
         </section>
 
-        {/* SECTION 5 — FinBuddy chat */}
-        <section style={{ ...section, marginBottom: 0 }} aria-labelledby="chat-heading">
+        {/* SECTION 5 — AI CHAT */}
+        <section
+          style={{
+            ...section,
+            marginBottom: 0,
+          }}
+          aria-labelledby="chat-heading"
+        >
           <h2 id="chat-heading" style={sectionTitle}>
             FinBuddy AI chat
           </h2>
+
           <p style={sectionHint}>
-            Ask about spending, savings, or purchases — answers use your numbers on this page.
+            Ask about spending, savings, or purchases —
+            answers use your numbers on this page.
           </p>
+
           <BuddyChat
             balance={balance}
             savingsRate={savingsRate}
