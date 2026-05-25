@@ -20,7 +20,7 @@ import BuddyChat from "./components/BuddyChat";
 
 import { IconMoon, IconSun } from "./components/icons";
 
-import logo from "./assets/finbuddy_favicon.png";
+import logo from "./assets/finbuddy1.png";
 
 const fontStack =
   '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
