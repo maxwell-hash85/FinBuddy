@@ -146,51 +146,23 @@ export default function FinBuddy() {
             flexWrap: "wrap",
           }}
         >
-          {/* LEFT SIDE */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "14px",
-            }}
-          >
-            {/* LOGO */}
-            <img
-              src={logo}
-              alt="FinBuddy Logo"
-              style={{
-                width: "48px",
-                height: "48px",
-                objectFit: "contain",
-                borderRadius: "12px",
-              }}
-            />
-
-            {/* BRANDING */}
-            <div>
-              <div
-                style={{
-                  fontSize: "clamp(22px, 5vw, 26px)",
-                  fontWeight: 700,
-                  letterSpacing: "-0.03em",
-                  lineHeight: 1.15,
-                }}
-              >
-                Fin<span style={{ color: COLORS.green }}>Buddy</span>
-              </div>
-
-              <div
-                style={{
-                  fontSize: "13px",
-                  color: COLORS.textSecondary,
-                  marginTop: "6px",
-                }}
-              >
-                Your AI finance companion
-              </div>
-            </div>
-          </div>
-
+         {/* LEFT SIDE */}
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+  }}
+>
+  <img
+    src={logo}
+    alt="FinBuddy Logo"
+    style={{
+      width: "220px",
+      height: "auto",
+      objectFit: "contain",
+    }}
+  />
+</div>
           {/* RIGHT SIDE */}
           <div
             style={{
