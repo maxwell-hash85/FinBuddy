@@ -18,9 +18,10 @@ import TopCategoryStrip from "./components/TopCategoryStrip";
 import Charts from "./components/Charts";
 import BuddyChat from "./components/BuddyChat";
 
-import { IconMoon, IconSun } from "./components/icons";
-
+import lightLogo from "../assets/lightmode.png";
 import logo from "./assets/finbuddy1.png";
+
+import { IconMoon, IconSun } from "./components/icons";
 
 const fontStack =
   '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
@@ -30,7 +31,6 @@ function greetingPrefix() {
 
   if (h < 12) return "Good morning";
   if (h < 17) return "Good afternoon";
-
   return "Good evening";
 }
 
@@ -146,23 +146,19 @@ export default function FinBuddy() {
             flexWrap: "wrap",
           }}
         >
-         {/* LEFT SIDE */}
-<div
-  style={{
-    display: "flex",
-    alignItems: "center",
-  }}
->
-  <img
-    src={logo}
-    alt="FinBuddy Logo"
-    style={{
-      width: "220px",
-      height: "auto",
-      objectFit: "contain",
-    }}
-  />
-</div>
+          {/* LEFT SIDE */}
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <img
+              src={mode === "dark" ? lightLogo : logo}
+              alt="FinBuddy Logo"
+              style={{
+                width: "220px",
+                height: "auto",
+                objectFit: "contain",
+              }}
+            />
+          </div>
+
           {/* RIGHT SIDE */}
           <div
             style={{
@@ -227,10 +223,8 @@ export default function FinBuddy() {
         </header>
 
         {/* SECTION 1 — OVERVIEW */}
-        <section style={section} aria-labelledby="overview-heading">
-          <h2 id="overview-heading" style={sectionTitle}>
-            Overview
-          </h2>
+        <section style={section}>
+          <h2 style={sectionTitle}>Overview</h2>
 
           <p
             style={{
@@ -247,19 +241,14 @@ export default function FinBuddy() {
             Balance and cash flow at a glance.
           </p>
 
-          <BalanceCard
-            balance={balance}
-            transactions={transactions}
-          />
+          <BalanceCard balance={balance} transactions={transactions} />
 
           <Stats income={income} expense={expense} />
         </section>
 
         {/* SECTION 2 — INSIGHTS */}
-        <section style={section} aria-labelledby="insights-heading">
-          <h2 id="insights-heading" style={sectionTitle}>
-            Insights
-          </h2>
+        <section style={section}>
+          <h2 style={sectionTitle}>Insights</h2>
 
           <p style={sectionHint}>
             Patterns, alerts, and category breakdown.
@@ -277,20 +266,15 @@ export default function FinBuddy() {
             topCategoryPercent={topBreakdownEntry?.percent}
           />
 
-          <FinBuddyInsightCard
-            transactions={transactions}
-          />
+          <FinBuddyInsightCard transactions={transactions} />
         </section>
 
         {/* SECTION 3 — TRANSACTIONS */}
-        <section style={section} aria-labelledby="tx-heading">
-          <h2 id="tx-heading" style={sectionTitle}>
-            Transactions
-          </h2>
+        <section style={section}>
+          <h2 style={sectionTitle}>Transactions</h2>
 
           <p style={sectionHint}>
-            Log income and expenses — FinBuddy uses this for
-            coaching.
+            Log income and expenses — FinBuddy uses this for coaching.
           </p>
 
           <TransactionForm onAdd={addTransaction} />
@@ -302,10 +286,8 @@ export default function FinBuddy() {
         </section>
 
         {/* SECTION 4 — CHARTS */}
-        <section style={section} aria-labelledby="charts-heading">
-          <h2 id="charts-heading" style={sectionTitle}>
-            Charts
-          </h2>
+        <section style={section}>
+          <h2 style={sectionTitle}>Charts</h2>
 
           <p style={sectionHint}>
             Visual split of where spending goes.
@@ -315,20 +297,11 @@ export default function FinBuddy() {
         </section>
 
         {/* SECTION 5 — AI CHAT */}
-        <section
-          style={{
-            ...section,
-            marginBottom: 0,
-          }}
-          aria-labelledby="chat-heading"
-        >
-          <h2 id="chat-heading" style={sectionTitle}>
-            FinBuddy AI chat
-          </h2>
+        <section style={{ ...section, marginBottom: 0 }}>
+          <h2 style={sectionTitle}>FinBuddy AI chat</h2>
 
           <p style={sectionHint}>
-            Ask about spending, savings, or purchases —
-            answers use your numbers on this page.
+            Ask about spending, savings, or purchases — answers use your data.
           </p>
 
           <BuddyChat
