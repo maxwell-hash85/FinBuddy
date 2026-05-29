@@ -20,8 +20,8 @@ import TopCategoryStrip from "./components/TopCategoryStrip";
 import Charts from "./components/Charts";
 import BuddyChat from "./components/BuddyChat";
 
-import lightLogo from "./assets/finbuddy-dark.png";
-import darkLogo from "./assets/finbuddy-light.png";
+import lightLogo from "./assets/finbuddy-light.png";
+import darkLogo from "./assets/finbuddy-dark.png";
 
 import { IconMoon, IconSun } from "./components/icons";
 
@@ -39,32 +39,31 @@ function greetingPrefix() {
 export default function FinBuddy() {
   const { mode, toggleTheme, colors: COLORS } = useTheme();
 
-  const { transactions, addTransaction, deleteTransaction } =
-    useTransactions();
+  const { transactions, addTransaction, deleteTransaction } = useTransactions();
 
   const { income, expense, balance, savingsRate } = useMemo(
     () => calcTotals(transactions),
-    [transactions]
+    [transactions],
   );
 
   const buddyContext = useMemo(
     () => buildBuddyContext(transactions),
-    [transactions]
+    [transactions],
   );
 
   const spendingBreakdown = useMemo(
     () => getSpendingByCategory(transactions),
-    [transactions]
+    [transactions],
   );
 
   const topCategory = useMemo(
     () => getTopCategory(transactions),
-    [transactions]
+    [transactions],
   );
 
   const topBreakdownEntry = useMemo(
     () => spendingBreakdown.find((x) => x.name === topCategory),
-    [spendingBreakdown, topCategory]
+    [spendingBreakdown, topCategory],
   );
 
   const sectionTitle = {
@@ -131,8 +130,7 @@ export default function FinBuddy() {
         style={{
           maxWidth: "720px",
           margin: "0 auto",
-          padding:
-            "clamp(1.25rem, 4vw, 2rem) clamp(1rem, 4vw, 1.5rem) 3rem",
+          padding: "clamp(1.25rem, 4vw, 2rem) clamp(1rem, 4vw, 1.5rem) 3rem",
         }}
       >
         {/* HEADER */}
@@ -199,8 +197,7 @@ export default function FinBuddy() {
                 fontWeight: 600,
                 fontFamily: "inherit",
                 boxShadow: COLORS.shadowSm,
-                transition:
-                  "transform 0.08s ease, border-color 0.2s ease",
+                transition: "transform 0.08s ease, border-color 0.2s ease",
               }}
             >
               {mode === "dark" ? (
@@ -245,14 +242,9 @@ export default function FinBuddy() {
             {greeting} — here&apos;s your money snapshot.
           </p>
 
-          <p style={sectionHint}>
-            Balance and cash flow at a glance.
-          </p>
+          <p style={sectionHint}>Balance and cash flow at a glance.</p>
 
-          <BalanceCard
-            balance={balance}
-            transactions={transactions}
-          />
+          <BalanceCard balance={balance} transactions={transactions} />
 
           <Stats income={income} expense={expense} />
         </section>
@@ -261,9 +253,7 @@ export default function FinBuddy() {
         <section style={section}>
           <h2 style={sectionTitle}>Insights</h2>
 
-          <p style={sectionHint}>
-            Patterns, alerts, and category breakdown.
-          </p>
+          <p style={sectionHint}>Patterns, alerts, and category breakdown.</p>
 
           <Insights
             transactions={transactions}
@@ -300,9 +290,7 @@ export default function FinBuddy() {
         <section style={section}>
           <h2 style={sectionTitle}>Charts</h2>
 
-          <p style={sectionHint}>
-            Visual split of where spending goes.
-          </p>
+          <p style={sectionHint}>Visual split of where spending goes.</p>
 
           <Charts transactions={transactions} />
         </section>
@@ -312,8 +300,8 @@ export default function FinBuddy() {
           <h2 style={sectionTitle}>FinBuddy AI Chat</h2>
 
           <p style={sectionHint}>
-            Ask about spending, savings, or purchases — answers use your
-            real financial data.
+            Ask about spending, savings, or purchases — answers use your real
+            financial data.
           </p>
 
           <BuddyChat
