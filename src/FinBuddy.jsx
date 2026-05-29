@@ -1,10 +1,12 @@
 import { useMemo } from "react";
 import { useTheme } from "./context/useTheme";
+
 import {
   calcTotals,
   getTopCategory,
   getSpendingByCategory,
 } from "./utils/calcFinance";
+
 import { buildBuddyContext } from "./utils/buildBuddyContext";
 import { useTransactions } from "./hooks/useTransactions";
 
@@ -18,8 +20,8 @@ import TopCategoryStrip from "./components/TopCategoryStrip";
 import Charts from "./components/Charts";
 import BuddyChat from "./components/BuddyChat";
 
-import lightLogo from "../assets/lightmode.png";
-import logo from "./assets/finbuddy1.png";
+import lightLogo from "./assets/logos/lightmode.png";
+import darkLogo from "./assets/logos/finbuddy1.png";
 
 import { IconMoon, IconSun } from "./components/icons";
 
@@ -147,14 +149,20 @@ export default function FinBuddy() {
           }}
         >
           {/* LEFT SIDE */}
-          <div style={{ display: "flex", alignItems: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
             <img
-              src={mode === "dark" ? lightLogo : logo}
+              src={mode === "dark" ? lightLogo : darkLogo}
               alt="FinBuddy Logo"
               style={{
-                width: "220px",
+                width: "clamp(160px, 24vw, 220px)",
                 height: "auto",
                 objectFit: "contain",
+                transition: "opacity 0.25s ease",
               }}
             />
           </div>
@@ -241,7 +249,10 @@ export default function FinBuddy() {
             Balance and cash flow at a glance.
           </p>
 
-          <BalanceCard balance={balance} transactions={transactions} />
+          <BalanceCard
+            balance={balance}
+            transactions={transactions}
+          />
 
           <Stats income={income} expense={expense} />
         </section>
@@ -298,10 +309,11 @@ export default function FinBuddy() {
 
         {/* SECTION 5 — AI CHAT */}
         <section style={{ ...section, marginBottom: 0 }}>
-          <h2 style={sectionTitle}>FinBuddy AI chat</h2>
+          <h2 style={sectionTitle}>FinBuddy AI Chat</h2>
 
           <p style={sectionHint}>
-            Ask about spending, savings, or purchases — answers use your data.
+            Ask about spending, savings, or purchases — answers use your
+            real financial data.
           </p>
 
           <BuddyChat
