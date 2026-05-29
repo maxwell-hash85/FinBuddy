@@ -20,8 +20,8 @@ import TopCategoryStrip from "./components/TopCategoryStrip";
 import Charts from "./components/Charts";
 import BuddyChat from "./components/BuddyChat";
 
-import lightLogo from "./assets/logos/finbuddy-dark.png";
-import darkLogo from "./assets/logos/finbuddy-light.png";
+import lightLogo from "./assets/finbuddy-dark.png";
+import darkLogo from "./assets/finbuddy-light.png";
 
 import { IconMoon, IconSun } from "./components/icons";
 
