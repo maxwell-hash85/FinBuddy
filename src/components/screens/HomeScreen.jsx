@@ -1,10 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTheme } from "../../context/useTheme";
+import { useProfile } from "../../context/ProfileProvider";
+import { useNotifications } from "../../context/NotificationsProvider";
 import { useTransactions } from "../../hooks/useTransactions";
 import { calcTotals, fmt } from "../../utils/calcFinance";
 import { getPrimaryProactiveInsight } from "../../utils/proactiveInsights";
-import { getFirstName, loadProfile } from "../../utils/profile";
+import { getFirstName } from "../../utils/profile";
 import { formatTxnDate, txnIcon } from "../../utils/transactionDisplay";
+import NotificationsPanel from "../NotificationsPanel";
 
 const GREEN = "#2bc62c";
 const RED = "#ef4444";
@@ -40,7 +43,7 @@ function timeAwareGreeting(date = new Date()) {
   return "Good evening";
 }
 
-function IconButton({ icon, label, onClick, badge }) {
+function IconButton({ icon, label, onClick, badge, showBadge }) {
   return (
     <button
       type="button"
@@ -63,7 +66,7 @@ function IconButton({ icon, label, onClick, badge }) {
       }}
     >
       <i className={`ti ${icon}`} style={{ fontSize: "18px" }} />
-      {badge && (
+      {showBadge && (
         <span
           style={{
             position: "absolute",
@@ -81,14 +84,17 @@ function IconButton({ icon, label, onClick, badge }) {
   );
 }
 
-export default function HomeScreen({ userName, onOpenSettings }) {
+export default function HomeScreen({ userName, onNavigate }) {
   const { colors: COLORS } = useTheme();
+  const { profile } = useProfile();
+  const { unreadCount } = useNotifications();
   const { transactions } = useTransactions();
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const firstName = useMemo(() => {
     if (userName) return getFirstName(userName);
-    return getFirstName(loadProfile().name);
-  }, [userName]);
+    return getFirstName(profile.name);
+  }, [userName, profile.name]);
 
   const headerDate = useMemo(() => formatHeaderDate(), []);
   const greeting = useMemo(() => timeAwareGreeting(), []);
@@ -149,11 +155,17 @@ export default function HomeScreen({ userName, onOpenSettings }) {
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: "8px", flexShrink: 0, paddingTop: "2px" }}>
-          <IconButton icon="ti-bell" label="Notifications" badge />
-          <IconButton icon="ti-settings" label="Settings" onClick={onOpenSettings} />
+        <div style={{ flexShrink: 0, paddingTop: "2px" }}>
+          <IconButton
+            icon="ti-bell"
+            label="Notifications"
+            showBadge={unreadCount > 0}
+            onClick={() => setShowNotifications(true)}
+          />
         </div>
       </header>
+
+      {showNotifications && <NotificationsPanel onClose={() => setShowNotifications(false)} />}
 
       {/* Balance hero */}
       <div style={{ ...card, padding: "1.5rem" }}>
@@ -285,7 +297,8 @@ export default function HomeScreen({ userName, onOpenSettings }) {
             marginBottom: "10px",
           }}
         >
-          Buddy Insight
+          <span style={{ color: GREEN }}>Buddy</span>
+          <span style={{ color: COLORS.textPrimary }}> Insight</span>
         </div>
         <p
           style={{
@@ -303,14 +316,39 @@ export default function HomeScreen({ userName, onOpenSettings }) {
       <div>
         <div
           style={{
-            fontSize: "13px",
-            fontWeight: 600,
-            color: COLORS.textPrimary,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
             marginBottom: "12px",
-            letterSpacing: "-0.02em",
           }}
         >
-          Recent
+          <div
+            style={{
+              fontSize: "13px",
+              fontWeight: 600,
+              color: COLORS.textPrimary,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Recent
+          </div>
+          {transactions.length > 0 && onNavigate && (
+            <button
+              type="button"
+              onClick={() => onNavigate("transactions")}
+              style={{
+                background: "none",
+                border: "none",
+                color: GREEN,
+                fontSize: "12px",
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              See all
+            </button>
+          )}
         </div>
 
         {recentTransactions.length === 0 ? (

@@ -3,6 +3,13 @@ import { useTheme } from "../../context/useTheme";
 import { useTransactions } from "../../hooks/useTransactions";
 import { streamBuddyReply } from "../../utils/buddyChatApi";
 import { buildTransactionsSummary } from "../../utils/buildTransactionsSummary";
+import {
+  calcTotals,
+  getSpendingByCategory,
+  getTopCategory,
+} from "../../utils/calcFinance";
+import { simulateBuddyReply } from "../../utils/buddySimulation";
+import { streamText } from "../../utils/streamText";
 import BuddyAvatar from "../BuddyAvatar";
 
 const GREEN = "#2bc62c";
@@ -46,6 +53,16 @@ export default function BuddyScreen() {
     [transactions],
   );
 
+  const simProps = useMemo(() => {
+    const totals = calcTotals(transactions);
+    return {
+      ...totals,
+      transactions,
+      topCategory: getTopCategory(transactions),
+      spendingBreakdown: getSpendingByCategory(transactions),
+    };
+  }, [transactions]);
+
   const scrollToBottom = useCallback(() => {
     const el = listRef.current;
     if (!el) return;
@@ -73,26 +90,32 @@ export default function BuddyScreen() {
     const controller = new AbortController();
     abortRef.current = controller;
 
+    const onDelta = (chunk) => {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === buddyId ? { ...m, text: m.text + chunk } : m)),
+      );
+    };
+
     try {
-      await streamBuddyReply({
-        messages: [...messages, userMsg],
-        transactionsSummary,
-        signal: controller.signal,
-        onDelta: (chunk) => {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === buddyId ? { ...m, text: m.text + chunk } : m)),
-          );
-        },
-      });
+      try {
+        await streamBuddyReply({
+          messages: [...messages, userMsg],
+          transactionsSummary,
+          signal: controller.signal,
+          onDelta,
+        });
+      } catch (apiErr) {
+        if (apiErr.name === "AbortError") throw apiErr;
+        const reply = simulateBuddyReply(text, simProps);
+        await streamText(reply, onDelta, controller.signal);
+      }
     } catch (err) {
       if (err.name !== "AbortError") {
         const message =
           err instanceof Error ? err.message : "Something went wrong. Please try again.";
         setMessages((prev) =>
           prev.map((m) =>
-            m.id === buddyId
-              ? { ...m, text: m.text || `Sorry — ${message}` }
-              : m,
+            m.id === buddyId ? { ...m, text: m.text || `Sorry — ${message}` } : m,
           ),
         );
       }

@@ -12,7 +12,7 @@ const NAV_HEIGHT = 72;
 
 const TABS = [
   { id: "home", label: "Home", icon: "ti-home" },
-  { id: "buddy", label: "Buddy", icon: "ti-message-circle" },
+  { id: "buddy", label: "Buddy", icon: "ti-robot" },
   { id: "transactions", label: "Transactions", icon: "ti-list" },
   { id: "profile", label: "Profile", icon: "ti-user" },
 ];
@@ -26,7 +26,7 @@ export default function FinBuddy() {
   function renderScreen() {
     switch (activeTab) {
       case "home":
-        return <HomeScreen onOpenSettings={() => setActiveTab("profile")} />;
+        return <HomeScreen onNavigate={setActiveTab} />;
       case "buddy":
         return <BuddyScreen />;
       case "transactions":

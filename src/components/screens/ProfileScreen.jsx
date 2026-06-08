@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { useTheme } from "../../context/useTheme";
+import { useProfile } from "../../context/ProfileProvider";
 import { useTransactions } from "../../hooks/useTransactions";
-import { loadProfile, PROFILE_KEY } from "../../utils/profile";
+import { parseBankStatementFile } from "../../utils/parseBankStatement";
+import Modal from "../Modal";
 
 const GREEN = "#2bc62c";
 const RED = "#ef4444";
@@ -153,43 +155,24 @@ function SettingRow({
 
 export default function ProfileScreen() {
   const { mode, toggleTheme, colors: COLORS } = useTheme();
-  const { transactions } = useTransactions();
+  const {
+    profile,
+    currencyLabel,
+    updateProfile,
+    connectEmailAlerts,
+    disconnectEmailAlerts,
+    setNotificationsEnabled,
+    signOut,
+    currencies,
+  } = useProfile();
+  const { transactions, importTransactions } = useTransactions();
 
-  const [profile, setProfile] = useState(loadProfile);
-  const [notifications, setNotifications] = useState(() => {
-    try {
-      return localStorage.getItem("finbuddy_notifications") === "true";
-    } catch {
-      return true;
-    }
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-    } catch {
-      /* ignore */
-    }
-  }, [profile]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("finbuddy_notifications", String(notifications));
-    } catch {
-      /* ignore */
-    }
-  }, [notifications]);
-
-  function editProfile() {
-    const name = window.prompt("Your name", profile.name);
-    if (name === null) return;
-    const email = window.prompt("Your email", profile.email);
-    if (email === null) return;
-    setProfile({
-      name: name.trim() || profile.name,
-      email: email.trim() || profile.email,
-    });
-  }
+  const fileInputRef = useRef(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [importMessage, setImportMessage] = useState("");
+  const [editForm, setEditForm] = useState({ name: profile.name, email: profile.email });
 
   function exportData() {
     const blob = new Blob([JSON.stringify({ profile, transactions }, null, 2)], {
@@ -203,15 +186,51 @@ export default function ProfileScreen() {
     URL.revokeObjectURL(url);
   }
 
-  function signOut() {
-    if (window.confirm("Sign out of FinBuddy?")) {
-      window.alert("Signed out (demo — no auth backend yet).");
+  function handleBankUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const rows = parseBankStatementFile(String(reader.result));
+        const count = importTransactions(rows);
+        setImportMessage(
+          count > 0
+            ? `Imported ${count} transaction${count !== 1 ? "s" : ""} from ${file.name}.`
+            : "No valid transactions found in that file.",
+        );
+      } catch {
+        setImportMessage("Could not parse that file. Use CSV or JSON with amount, type, and category.");
+      }
+      e.target.value = "";
+    };
+    reader.readAsText(file);
+  }
+
+  function saveProfile() {
+    updateProfile({
+      name: editForm.name.trim() || profile.name,
+      email: editForm.email.trim() || profile.email,
+    });
+    setShowEditModal(false);
+  }
+
+  function handleSignOut() {
+    if (window.confirm("Sign out? Your local data will be cleared.")) {
+      signOut();
     }
   }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-      {/* Profile header */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv,.json,text/csv,application/json"
+        style={{ display: "none" }}
+        onChange={handleBankUpload}
+      />
+
       <header
         style={{
           display: "flex",
@@ -253,24 +272,36 @@ export default function ProfileScreen() {
         </div>
       </header>
 
+      {importMessage && (
+        <div
+          style={{
+            background: COLORS.surface,
+            border: `1px solid ${COLORS.border}`,
+            borderRadius: "12px",
+            padding: "12px 14px",
+            fontSize: "13px",
+            color: COLORS.textSecondary,
+            marginBottom: "8px",
+          }}
+        >
+          {importMessage}
+        </div>
+      )}
+
       <SettingGroup title="Data">
         <SettingRow
           icon="ti-upload"
           label="Upload bank statement"
-          onClick={() => window.alert("Bank statement upload coming soon.")}
+          onClick={() => fileInputRef.current?.click()}
           isFirst
         />
         <SettingRow
           icon="ti-mail"
           label="Connect email alerts"
-          onClick={() => window.alert("Email alerts coming soon.")}
+          value={profile.emailAlertsConnected ? "Connected" : "Off"}
+          onClick={() => setShowEmailModal(true)}
         />
-        <SettingRow
-          icon="ti-download"
-          label="Export my data"
-          onClick={exportData}
-          isLast
-        />
+        <SettingRow icon="ti-download" label="Export my data" onClick={exportData} isLast />
       </SettingGroup>
 
       <SettingGroup title="Preferences">
@@ -286,16 +317,152 @@ export default function ProfileScreen() {
           icon="ti-bell"
           label="Notifications"
           toggle
-          toggleOn={notifications}
-          onToggle={() => setNotifications((n) => !n)}
+          toggleOn={profile.notificationsEnabled}
+          onToggle={() => setNotificationsEnabled(!profile.notificationsEnabled)}
         />
-        <SettingRow icon="ti-currency-naira" label="Currency" value="NGN ₦" isLast />
+        <SettingRow
+          icon="ti-currency-naira"
+          label="Currency"
+          value={currencyLabel}
+          onClick={() => setShowCurrencyModal(true)}
+          isLast
+        />
       </SettingGroup>
 
       <SettingGroup title="Account">
-        <SettingRow icon="ti-user-edit" label="Edit profile" onClick={editProfile} isFirst />
-        <SettingRow icon="ti-logout" label="Sign out" onClick={signOut} danger isLast />
+        <SettingRow
+          icon="ti-user-edit"
+          label="Edit profile"
+          onClick={() => {
+            setEditForm({ name: profile.name, email: profile.email });
+            setShowEditModal(true);
+          }}
+          isFirst
+        />
+        <SettingRow icon="ti-logout" label="Sign out" onClick={handleSignOut} danger isLast />
       </SettingGroup>
+
+      {showEditModal && (
+        <Modal title="Edit profile" onClose={() => setShowEditModal(false)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <label style={{ fontSize: "12px", color: COLORS.textSecondary }}>Name</label>
+            <input
+              value={editForm.name}
+              onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+              style={{
+                background: COLORS.surface,
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: "8px",
+                padding: "12px",
+                color: COLORS.textPrimary,
+                fontSize: "14px",
+                fontFamily: "inherit",
+              }}
+            />
+            <label style={{ fontSize: "12px", color: COLORS.textSecondary }}>Email</label>
+            <input
+              type="email"
+              value={editForm.email}
+              onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
+              style={{
+                background: COLORS.surface,
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: "8px",
+                padding: "12px",
+                color: COLORS.textPrimary,
+                fontSize: "14px",
+                fontFamily: "inherit",
+              }}
+            />
+            <button
+              type="button"
+              onClick={saveProfile}
+              style={{
+                marginTop: "8px",
+                height: "42px",
+                background: GREEN,
+                color: "#0d0d0d",
+                border: "none",
+                borderRadius: "8px",
+                fontWeight: 700,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              Save
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {showCurrencyModal && (
+        <Modal title="Currency" onClose={() => setShowCurrencyModal(false)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {Object.entries(currencies).map(([code, { label }]) => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => {
+                  updateProfile({ currency: code });
+                  setShowCurrencyModal(false);
+                }}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "14px",
+                  background: profile.currency === code ? "rgba(43,198,44,0.12)" : COLORS.surface,
+                  border: `1px solid ${profile.currency === code ? GREEN : COLORS.border}`,
+                  borderRadius: "10px",
+                  color: COLORS.textPrimary,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  fontSize: "14px",
+                }}
+              >
+                {label}
+                {profile.currency === code && (
+                  <i className="ti ti-check" style={{ color: GREEN }} />
+                )}
+              </button>
+            ))}
+          </div>
+        </Modal>
+      )}
+
+      {showEmailModal && (
+        <Modal title="Email alerts" onClose={() => setShowEmailModal(false)}>
+          <p style={{ fontSize: "14px", color: COLORS.textSecondary, lineHeight: 1.6, marginBottom: "16px" }}>
+            {profile.emailAlertsConnected
+              ? `Alerts are connected to ${profile.email}. You'll receive spending summaries and budget warnings.`
+              : `Connect ${profile.email} to receive spending alerts and weekly summaries.`}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              if (profile.emailAlertsConnected) {
+                disconnectEmailAlerts();
+              } else {
+                connectEmailAlerts();
+              }
+              setShowEmailModal(false);
+            }}
+            style={{
+              width: "100%",
+              height: "42px",
+              background: profile.emailAlertsConnected ? COLORS.surface : GREEN,
+              color: profile.emailAlertsConnected ? COLORS.textPrimary : "#0d0d0d",
+              border: `1px solid ${COLORS.border}`,
+              borderRadius: "8px",
+              fontWeight: 700,
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            {profile.emailAlertsConnected ? "Disconnect" : "Connect email"}
+          </button>
+        </Modal>
+      )}
     </div>
   );
 }

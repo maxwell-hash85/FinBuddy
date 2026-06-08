@@ -2,8 +2,15 @@ import { useState } from "react";
 import { useTheme } from "../context/useTheme";
 import { FONT } from "../styles/colors";
 
-export default function TransactionForm({ onAdd }) {
+export default function TransactionForm({
+  onAdd,
+  onSubmit,
+  initialValues,
+  submitLabel = "+ ADD TRANSACTION",
+}) {
   const { colors: COLORS } = useTheme();
+  const isEdit = Boolean(initialValues);
+
   const inputStyle = {
     height: "40px",
     background: COLORS.bg,
@@ -18,24 +25,28 @@ export default function TransactionForm({ onAdd }) {
     boxSizing: "border-box",
   };
 
-  const [amount, setAmount] = useState("");
-  const [type, setType] = useState("income");
-  const [category, setCategory] = useState("");
+  const [amount, setAmount] = useState(initialValues ? String(initialValues.amount) : "");
+  const [type, setType] = useState(initialValues?.type || "income");
+  const [category, setCategory] = useState(initialValues?.category || "");
   const [error, setError] = useState(false);
 
-  function handleAdd() {
-    const success = onAdd({ amount, type, category });
+  const handleSubmit = onSubmit || onAdd;
+
+  function handleSave() {
+    const success = handleSubmit({ amount, type, category });
     if (!success) {
       setError(true);
       setTimeout(() => setError(false), 1200);
       return;
     }
-    setAmount("");
-    setCategory("");
+    if (!isEdit) {
+      setAmount("");
+      setCategory("");
+    }
   }
 
   function handleKeyDown(e) {
-    if (e.key === "Enter") handleAdd();
+    if (e.key === "Enter") handleSave();
   }
 
   function focusStyle(e) {
@@ -55,7 +66,7 @@ export default function TransactionForm({ onAdd }) {
         border: `1px solid ${COLORS.border}`,
         borderRadius: "12px",
         padding: "1.5rem",
-        marginBottom: "2rem",
+        marginBottom: isEdit ? 0 : "2rem",
         display: "flex",
         flexDirection: "column",
         gap: "12px",
@@ -150,7 +161,7 @@ export default function TransactionForm({ onAdd }) {
           letterSpacing: "0.02em",
           cursor: "pointer",
         }}
-        onClick={handleAdd}
+        onClick={handleSave}
         onMouseEnter={(e) => {
           e.currentTarget.style.background = COLORS.blueDark;
         }}
@@ -164,7 +175,7 @@ export default function TransactionForm({ onAdd }) {
           e.currentTarget.style.transform = "scale(1)";
         }}
       >
-        + ADD TRANSACTION
+        {submitLabel}
       </button>
     </div>
   );

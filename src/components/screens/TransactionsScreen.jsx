@@ -8,6 +8,7 @@ import {
   matchesFilterPill,
   txnIcon,
 } from "../../utils/transactionDisplay";
+import Modal from "../Modal";
 import TransactionForm from "../TransactionForm";
 
 const GREEN = "#2bc62c";
@@ -17,11 +18,13 @@ const FILTER_PILLS = ["All", "Income", "Food", "Transport", "Subscriptions"];
 
 export default function TransactionsScreen() {
   const { colors: COLORS } = useTheme();
-  const { transactions, addTransaction } = useTransactions();
+  const { transactions, addTransaction, updateTransaction, deleteTransaction } =
+    useTransactions();
 
   const [search, setSearch] = useState("");
   const [activePill, setActivePill] = useState("All");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingTxn, setEditingTxn] = useState(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -40,6 +43,19 @@ export default function TransactionsScreen() {
     const ok = addTransaction(data);
     if (ok) setShowAddForm(false);
     return ok;
+  }
+
+  function handleEdit(data) {
+    if (!editingTxn) return false;
+    const ok = updateTransaction(editingTxn.id, data);
+    if (ok) setEditingTxn(null);
+    return ok;
+  }
+
+  function handleDelete(id) {
+    if (window.confirm("Delete this transaction?")) {
+      deleteTransaction(id);
+    }
   }
 
   return (
@@ -270,6 +286,39 @@ export default function TransactionsScreen() {
                       {isIncome ? "+" : "−"}
                       {fmt(txn.amount)}
                     </div>
+
+                    <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                      <button
+                        type="button"
+                        aria-label="Edit transaction"
+                        onClick={() => setEditingTxn(txn)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: COLORS.textMuted,
+                          cursor: "pointer",
+                          padding: "4px",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        <i className="ti ti-pencil" style={{ fontSize: "16px" }} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Delete transaction"
+                        onClick={() => handleDelete(txn.id)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: RED,
+                          cursor: "pointer",
+                          padding: "4px",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        <i className="ti ti-trash" style={{ fontSize: "16px" }} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -278,66 +327,20 @@ export default function TransactionsScreen() {
         ))
       )}
 
-      {/* Add transaction modal */}
       {showAddForm && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Add transaction"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0, 0, 0, 0.65)",
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "center",
-            zIndex: 200,
-            padding: "16px",
-          }}
-          onClick={() => setShowAddForm(false)}
-        >
-          <div
-            style={{
-              width: "100%",
-              maxWidth: "720px",
-              maxHeight: "90vh",
-              overflowY: "auto",
-              borderRadius: "16px 16px 0 0",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "12px",
-                padding: "0 4px",
-              }}
-            >
-              <span style={{ fontSize: "16px", fontWeight: 600, color: "#fafafa" }}>
-                New transaction
-              </span>
-              <button
-                type="button"
-                aria-label="Close"
-                onClick={() => setShowAddForm(false)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "#a1a1aa",
-                  cursor: "pointer",
-                  fontSize: "24px",
-                  lineHeight: 1,
-                  fontFamily: "inherit",
-                }}
-              >
-                ×
-              </button>
-            </div>
-            <TransactionForm onAdd={handleAdd} />
-          </div>
-        </div>
+        <Modal title="New transaction" onClose={() => setShowAddForm(false)}>
+          <TransactionForm onAdd={handleAdd} />
+        </Modal>
+      )}
+
+      {editingTxn && (
+        <Modal title="Edit transaction" onClose={() => setEditingTxn(null)}>
+          <TransactionForm
+            initialValues={editingTxn}
+            onSubmit={handleEdit}
+            submitLabel="SAVE CHANGES"
+          />
+        </Modal>
       )}
     </div>
   );
