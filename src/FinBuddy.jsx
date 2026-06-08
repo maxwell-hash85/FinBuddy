@@ -1,92 +1,42 @@
-import { useMemo } from "react";
+import { useState } from "react";
 import { useTheme } from "./context/useTheme";
 
-import {
-  calcTotals,
-  getTopCategory,
-  getSpendingByCategory,
-} from "./utils/calcFinance";
+import HomeScreen from "./components/screens/HomeScreen";
+import BuddyScreen from "./components/screens/BuddyScreen";
+import TransactionsScreen from "./components/screens/TransactionsScreen";
+import ProfileScreen from "./components/screens/ProfileScreen";
 
-import { buildBuddyContext } from "./utils/buildBuddyContext";
-import { useTransactions } from "./hooks/useTransactions";
+import { FONT } from "./styles/colors";
 
-import BalanceCard from "./components/BalanceCard";
-import Stats from "./components/Stats";
-import TransactionForm from "./components/TransactionForm";
-import TransactionList from "./components/TransactionList";
-import Insights from "./components/Insights";
-import FinBuddyInsightCard from "./components/FinBuddyInsightCard";
-import TopCategoryStrip from "./components/TopCategoryStrip";
-import Charts from "./components/Charts";
-import BuddyChat from "./components/BuddyChat";
+const NAV_HEIGHT = 72;
 
-import lightLogo from "./assets/finbuddy-light.png";
-import darkLogo from "./assets/finbuddy-dark.png";
-
-import { IconMoon, IconSun } from "./components/icons";
-
-const fontStack =
-  '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-
-function greetingPrefix() {
-  const h = new Date().getHours();
-
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
-}
+const TABS = [
+  { id: "home", label: "Home", icon: "ti-home" },
+  { id: "buddy", label: "Buddy", icon: "ti-message-circle" },
+  { id: "transactions", label: "Transactions", icon: "ti-list" },
+  { id: "profile", label: "Profile", icon: "ti-user" },
+];
 
 export default function FinBuddy() {
-  const { mode, toggleTheme, colors: COLORS } = useTheme();
+  const { colors: COLORS } = useTheme();
+  const [activeTab, setActiveTab] = useState("home");
 
-  const { transactions, addTransaction, deleteTransaction } = useTransactions();
+  const navActive = COLORS.navActive ?? COLORS.green;
 
-  const { income, expense, balance, savingsRate } = useMemo(
-    () => calcTotals(transactions),
-    [transactions],
-  );
-
-  const buddyContext = useMemo(
-    () => buildBuddyContext(transactions),
-    [transactions],
-  );
-
-  const spendingBreakdown = useMemo(
-    () => getSpendingByCategory(transactions),
-    [transactions],
-  );
-
-  const topCategory = useMemo(
-    () => getTopCategory(transactions),
-    [transactions],
-  );
-
-  const topBreakdownEntry = useMemo(
-    () => spendingBreakdown.find((x) => x.name === topCategory),
-    [spendingBreakdown, topCategory],
-  );
-
-  const sectionTitle = {
-    fontSize: "13px",
-    fontWeight: 600,
-    letterSpacing: "-0.02em",
-    color: COLORS.textPrimary,
-    marginBottom: "12px",
-  };
-
-  const sectionHint = {
-    fontSize: "12px",
-    color: COLORS.textSecondary,
-    marginBottom: "14px",
-    lineHeight: 1.45,
-    maxWidth: "520px",
-  };
-
-  const section = {
-    marginBottom: "2.25rem",
-  };
-
-  const greeting = greetingPrefix();
+  function renderScreen() {
+    switch (activeTab) {
+      case "home":
+        return <HomeScreen onOpenSettings={() => setActiveTab("profile")} />;
+      case "buddy":
+        return <BuddyScreen />;
+      case "transactions":
+        return <TransactionsScreen />;
+      case "profile":
+        return <ProfileScreen />;
+      default:
+        return null;
+    }
+  }
 
   return (
     <div
@@ -94,11 +44,10 @@ export default function FinBuddy() {
         minHeight: "100vh",
         background: COLORS.bg,
         color: COLORS.textPrimary,
-        fontFamily: fontStack,
+        fontFamily: FONT,
         margin: 0,
         padding: 0,
         WebkitFontSmoothing: "antialiased",
-        transition: "background 0.25s ease, color 0.2s ease",
       }}
     >
       <style>{`
@@ -126,196 +75,68 @@ export default function FinBuddy() {
         }
       `}</style>
 
-      <div
+      <main
         style={{
-          maxWidth: "720px",
+          maxWidth: activeTab === "buddy" ? "100%" : "720px",
           margin: "0 auto",
-          padding: "clamp(1.25rem, 4vw, 2rem) clamp(1rem, 4vw, 1.5rem) 3rem",
+          padding:
+            activeTab === "buddy"
+              ? "0"
+              : `clamp(1.25rem, 4vw, 2rem) clamp(1rem, 4vw, 1.5rem) calc(${NAV_HEIGHT}px + env(safe-area-inset-bottom, 0px) + 1.5rem)`,
         }}
       >
-        {/* HEADER */}
-        <header
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "16px",
-            marginBottom: "2rem",
-            paddingBottom: "1.25rem",
-            borderBottom: `1px solid ${COLORS.border}`,
-            flexWrap: "wrap",
-          }}
-        >
-          {/* LEFT SIDE */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <img
-              src={mode === "dark" ? lightLogo : darkLogo}
-              alt="FinBuddy Logo"
-              style={{
-                width: "clamp(160px, 24vw, 220px)",
-                height: "auto",
-                objectFit: "contain",
-                transition: "opacity 0.25s ease",
-              }}
-            />
-          </div>
+        {renderScreen()}
+      </main>
 
-          {/* RIGHT SIDE */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              flexShrink: 0,
-            }}
-          >
+      <nav
+        aria-label="Main navigation"
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: NAV_HEIGHT,
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          background: "#0d0d0d",
+          borderTop: "1px solid #161616",
+          display: "flex",
+          alignItems: "stretch",
+          justifyContent: "space-around",
+          zIndex: 100,
+        }}
+      >
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          const color = isActive ? navActive : COLORS.textMuted;
+
+          return (
             <button
+              key={tab.id}
               type="button"
-              onClick={toggleTheme}
-              aria-label={
-                mode === "dark"
-                  ? "Switch to light theme"
-                  : "Switch to dark theme"
-              }
-              title={mode === "dark" ? "Light theme" : "Dark theme"}
+              onClick={() => setActiveTab(tab.id)}
+              aria-current={isActive ? "page" : undefined}
               style={{
+                flex: 1,
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
-                gap: "8px",
-                padding: "8px 14px",
-                borderRadius: "999px",
-                border: `1px solid ${COLORS.border}`,
-                background: COLORS.surface,
-                color: COLORS.textPrimary,
+                justifyContent: "center",
+                gap: "4px",
+                background: "none",
+                border: "none",
                 cursor: "pointer",
-                fontSize: "12px",
-                fontWeight: 600,
+                padding: "8px 4px",
                 fontFamily: "inherit",
-                boxShadow: COLORS.shadowSm,
-                transition: "transform 0.08s ease, border-color 0.2s ease",
+                color,
+                transition: "color 0.15s ease",
               }}
             >
-              {mode === "dark" ? (
-                <IconMoon size={16} color={COLORS.textSecondary} />
-              ) : (
-                <IconSun size={16} color={COLORS.amber} />
-              )}
-
-              <span>{mode === "dark" ? "Dark" : "Light"}</span>
+              <i className={`ti ${tab.icon}`} style={{ fontSize: "22px", lineHeight: 1 }} />
+              <span style={{ fontSize: "10px", fontWeight: isActive ? 600 : 500 }}>{tab.label}</span>
             </button>
-
-            <div
-              style={{
-                fontSize: "11px",
-                color: COLORS.textSecondary,
-                background: COLORS.surface,
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: "999px",
-                padding: "6px 12px",
-                letterSpacing: "0.06em",
-                fontWeight: 600,
-                boxShadow: COLORS.shadowSm,
-              }}
-            >
-              MVP
-            </div>
-          </div>
-        </header>
-
-        {/* SECTION 1 — OVERVIEW */}
-        <section style={section}>
-          <h2 style={sectionTitle}>Overview</h2>
-
-          <p
-            style={{
-              ...sectionHint,
-              fontSize: "15px",
-              fontWeight: 500,
-              color: COLORS.textPrimary,
-            }}
-          >
-            {greeting} — here&apos;s your money snapshot.
-          </p>
-
-          <p style={sectionHint}>Balance and cash flow at a glance.</p>
-
-          <BalanceCard balance={balance} transactions={transactions} />
-
-          <Stats income={income} expense={expense} />
-        </section>
-
-        {/* SECTION 2 — INSIGHTS */}
-        <section style={section}>
-          <h2 style={sectionTitle}>Insights</h2>
-
-          <p style={sectionHint}>Patterns, alerts, and category breakdown.</p>
-
-          <Insights
-            transactions={transactions}
-            balance={balance}
-            savingsRate={savingsRate}
-          />
-
-          <TopCategoryStrip
-            topCategory={topCategory}
-            topCategoryAmount={topBreakdownEntry?.amount ?? 0}
-            topCategoryPercent={topBreakdownEntry?.percent}
-          />
-
-          <FinBuddyInsightCard transactions={transactions} />
-        </section>
-
-        {/* SECTION 3 — TRANSACTIONS */}
-        <section style={section}>
-          <h2 style={sectionTitle}>Transactions</h2>
-
-          <p style={sectionHint}>
-            Log income and expenses — FinBuddy uses this for coaching.
-          </p>
-
-          <TransactionForm onAdd={addTransaction} />
-
-          <TransactionList
-            transactions={transactions}
-            onDelete={deleteTransaction}
-          />
-        </section>
-
-        {/* SECTION 4 — CHARTS */}
-        <section style={section}>
-          <h2 style={sectionTitle}>Charts</h2>
-
-          <p style={sectionHint}>Visual split of where spending goes.</p>
-
-          <Charts transactions={transactions} />
-        </section>
-
-        {/* SECTION 5 — AI CHAT */}
-        <section style={{ ...section, marginBottom: 0 }}>
-          <h2 style={sectionTitle}>FinBuddy AI Chat</h2>
-
-          <p style={sectionHint}>
-            Ask about spending, savings, or purchases — answers use your real
-            financial data.
-          </p>
-
-          <BuddyChat
-            balance={balance}
-            savingsRate={savingsRate}
-            transactions={transactions}
-            topCategory={topCategory}
-            spendingBreakdown={spendingBreakdown}
-            income={income}
-            expense={expense}
-            context={buddyContext}
-          />
-        </section>
-      </div>
+          );
+        })}
+      </nav>
     </div>
   );
 }

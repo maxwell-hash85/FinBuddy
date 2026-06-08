@@ -5,3 +5,5 @@
 import { THEMES } from "./themes";
 
 export const COLORS = THEMES.dark;
+
+export const FONT = "'Inter', sans-serif";

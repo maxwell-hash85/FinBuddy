@@ -8,6 +8,7 @@ import {
   YAxis,
 } from "recharts";
 import { useTheme } from "../context/useTheme";
+import { FONT } from "../styles/colors";
 import { fmt, getSpendingByCategory } from "../utils/calcFinance";
 import { IconChart } from "./icons";
 
@@ -80,7 +81,7 @@ export default function Charts({ transactions }) {
               type="category"
               dataKey="name"
               width={88}
-              tick={{ fill: COLORS.textSecondary, fontSize: 11 }}
+              tick={{ fill: COLORS.textSecondary, fontSize: 11, fontFamily: FONT }}
               axisLine={false}
               tickLine={false}
             />
@@ -91,6 +92,7 @@ export default function Charts({ transactions }) {
                 border: `1px solid ${COLORS.border}`,
                 borderRadius: "10px",
                 fontSize: "12px",
+                fontFamily: FONT,
                 color: COLORS.textPrimary,
               }}
               formatter={(value, _name, item) => [

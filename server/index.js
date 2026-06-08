@@ -180,6 +180,103 @@ async function callAnthropic({ system, messages }) {
   return text.trim();
 }
 
+app.post("/api/buddy/messages", async (req, res) => {
+  try {
+    const { messages, system } = req.body || {};
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: "Missing ANTHROPIC_API_KEY" });
+    }
+
+    const normalized = Array.isArray(messages)
+      ? messages
+          .filter((m) => m && typeof m === "object")
+          .map((m) => ({
+            role: m.role === "user" ? "user" : "assistant",
+            content: typeof m.content === "string" ? m.content : "",
+          }))
+          .filter((m) => m.content.trim().length > 0)
+      : [];
+
+    if (normalized.length === 0) {
+      return res.status(400).json({ error: "No messages provided" });
+    }
+
+    const systemPrompt =
+      typeof system === "string" && system.trim()
+        ? system.trim()
+        : "You are Buddy, a friendly personal finance companion.";
+
+    const upstream = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        stream: true,
+        system: systemPrompt,
+        messages: normalized,
+      }),
+    });
+
+    if (!upstream.ok) {
+      const err = await upstream.json().catch(() => ({}));
+      const msg =
+        typeof err?.error?.message === "string"
+          ? err.error.message
+          : `Anthropic error (${upstream.status})`;
+      return res.status(upstream.status).json({ error: msg });
+    }
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    const reader = upstream.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const data = line.slice(6).trim();
+        if (data === "[DONE]") continue;
+
+        try {
+          const event = JSON.parse(data);
+          if (event.type === "content_block_delta" && event.delta?.text) {
+            res.write(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`);
+          }
+        } catch {
+          /* ignore malformed events */
+        }
+      }
+    }
+
+    res.write("data: [DONE]\n\n");
+    res.end();
+  } catch (err) {
+    if (!res.headersSent) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : "Unknown server error",
+      });
+    } else {
+      res.end();
+    }
+  }
+});
+
 app.post("/api/chat", async (req, res) => {
   try {
     const { messages, context } = req.body || {};

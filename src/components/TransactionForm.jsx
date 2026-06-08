@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTheme } from "../context/useTheme";
+import { FONT } from "../styles/colors";
 
 export default function TransactionForm({ onAdd }) {
   const { colors: COLORS } = useTheme();
@@ -10,7 +11,7 @@ export default function TransactionForm({ onAdd }) {
     borderRadius: "8px",
     padding: "0 12px",
     fontSize: "13px",
-    fontFamily: "inherit",
+    fontFamily: FONT,
     color: COLORS.textPrimary,
     outline: "none",
     width: "100%",
@@ -145,7 +146,7 @@ export default function TransactionForm({ onAdd }) {
           borderRadius: "8px",
           fontSize: "13px",
           fontWeight: "700",
-          fontFamily: "inherit",
+          fontFamily: FONT,
           letterSpacing: "0.02em",
           cursor: "pointer",
         }}

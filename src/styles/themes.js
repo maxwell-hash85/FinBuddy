@@ -5,21 +5,23 @@
  */
 
 const dark = {
-  bg: "#050505",
-  surface: "#0c0c0c",
-  surfaceHover: "#141414",
-  border: "#27272a",
-  borderAccent: "#3f3f46",
+  bg: "#0d0d0d",
+  surface: "#161616",
+  surfaceHover: "#1a1a1a",
+  border: "#1e1e1e",
+  borderAccent: "#2a2a2a",
 
-  green: "#22c55e",
-  greenDark: "#16a34a",
-  greenGlow: "rgba(34, 197, 94, 0.18)",
+  green: "#2bc62c",
+  greenDark: "#24a825",
+  greenGlow: "rgba(43, 198, 44, 0.18)",
 
   /** Primary accent for buttons / links (green — maps legacy “blue” slots) */
-  blue: "#22c55e",
-  blueDark: "#16a34a",
-  blueSoft: "rgba(34, 197, 94, 0.12)",
-  blueStroke: "rgba(34, 197, 94, 0.38)",
+  blue: "#2bc62c",
+  blueDark: "#24a825",
+  blueSoft: "rgba(43, 198, 44, 0.12)",
+  blueStroke: "rgba(43, 198, 44, 0.38)",
+
+  navActive: "#2bc62c",
 
   amber: "#fbbf24",
   red: "#f87171",
@@ -59,6 +61,8 @@ const light = {
 
   shadowSm: "0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.06)",
   shadowChat: "0 12px 40px rgba(0, 0, 0, 0.1)",
+
+  navActive: "#2bc62c",
 };
 
 export const THEMES = {

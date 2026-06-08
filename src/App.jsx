@@ -1,10 +1,13 @@
 import FinBuddy from "./FinBuddy";
 import { ThemeProvider } from "./context/ThemeProvider";
+import { TransactionsProvider } from "./context/TransactionsProvider";
 
 function App() {
   return (
     <ThemeProvider>
-      <FinBuddy />
+      <TransactionsProvider>
+        <FinBuddy />
+      </TransactionsProvider>
     </ThemeProvider>
   );
 }
