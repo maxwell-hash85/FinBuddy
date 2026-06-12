@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Bell } from "lucide-react";
 import { useTheme } from "../../context/useTheme";
 import { useProfile } from "../../context/ProfileProvider";
 import { useNotifications } from "../../context/NotificationsProvider";
@@ -43,7 +44,7 @@ function timeAwareGreeting(date = new Date()) {
   return "Good evening";
 }
 
-function IconButton({ icon, label, onClick, badge, showBadge }) {
+function IconButton({ label, onClick, showBadge }) {
   return (
     <button
       type="button"
@@ -65,7 +66,7 @@ function IconButton({ icon, label, onClick, badge, showBadge }) {
         flexShrink: 0,
       }}
     >
-      <i className={`ti ${icon}`} style={{ fontSize: "18px" }} />
+      <Bell size={18} strokeWidth={2} />
       {showBadge && (
         <span
           style={{
@@ -157,7 +158,6 @@ export default function HomeScreen({ userName, onNavigate }) {
 
         <div style={{ flexShrink: 0, paddingTop: "2px" }}>
           <IconButton
-            icon="ti-bell"
             label="Notifications"
             showBadge={unreadCount > 0}
             onClick={() => setShowNotifications(true)}
@@ -369,6 +369,7 @@ export default function HomeScreen({ userName, onNavigate }) {
               const isIncome = txn.type === "income";
               const amountColor = isIncome ? GREEN : RED;
               const isLast = i === recentTransactions.length - 1;
+              const Icon = txnIcon(txn);
 
               return (
                 <div
@@ -395,7 +396,7 @@ export default function HomeScreen({ userName, onNavigate }) {
                       color: amountColor,
                     }}
                   >
-                    <i className={`ti ${txnIcon(txn)}`} style={{ fontSize: "18px" }} />
+                    <Icon size={18} strokeWidth={2} />
                   </div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
