@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTheme } from "./context/useTheme";
+import { Home, MessageCircle, List, User } from "lucide-react";
 
 import HomeScreen from "./components/screens/HomeScreen";
 import BuddyScreen from "./components/screens/BuddyScreen";
@@ -11,10 +12,10 @@ import { FONT } from "./styles/colors";
 const NAV_HEIGHT = 72;
 
 const TABS = [
-  { id: "home", label: "Home", icon: "ti-home" },
-  { id: "buddy", label: "Buddy", icon: "ti-robot" },
-  { id: "transactions", label: "Transactions", icon: "ti-list" },
-  { id: "profile", label: "Profile", icon: "ti-user" },
+  { id: "home", label: "Home", icon: Home },
+  { id: "buddy", label: "Buddy", icon: MessageCircle },
+  { id: "transactions", label: "Transactions", icon: List },
+  { id: "profile", label: "Profile", icon: User },
 ];
 
 export default function FinBuddy() {
@@ -108,6 +109,7 @@ export default function FinBuddy() {
         {TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           const color = isActive ? navActive : COLORS.textMuted;
+          const Icon = tab.icon;
 
           return (
             <button
@@ -131,7 +133,7 @@ export default function FinBuddy() {
                 transition: "color 0.15s ease",
               }}
             >
-              <i className={`ti ${tab.icon}`} style={{ fontSize: "22px", lineHeight: 1 }} />
+              <Icon size={22} strokeWidth={2} color={color} />
               <span style={{ fontSize: "10px", fontWeight: isActive ? 600 : 500 }}>{tab.label}</span>
             </button>
           );
