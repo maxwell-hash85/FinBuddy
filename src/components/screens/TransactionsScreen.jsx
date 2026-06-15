@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { useTheme } from "../../context/useTheme";
 import { useTransactions } from "../../hooks/useTransactions";
 import { fmt } from "../../utils/calcFinance";
@@ -111,18 +111,20 @@ export default function TransactionsScreen() {
 
       {/* Search */}
       <div style={{ position: "relative" }}>
-        <i
-          className="ti ti-search"
+        <div
           style={{
             position: "absolute",
             left: "14px",
             top: "50%",
             transform: "translateY(-50%)",
-            fontSize: "18px",
             color: COLORS.textMuted,
             pointerEvents: "none",
+            display: "flex",
+            alignItems: "center",
           }}
-        />
+        >
+          <Search size={16} strokeWidth={2} />
+        </div>
         <input
           type="search"
           value={search}
@@ -225,6 +227,7 @@ export default function TransactionsScreen() {
                 const isIncome = txn.type === "income";
                 const amountColor = isIncome ? GREEN : RED;
                 const isLast = i === group.items.length - 1;
+                const Icon = txnIcon(txn);
 
                 return (
                   <div
@@ -234,9 +237,12 @@ export default function TransactionsScreen() {
                       alignItems: "center",
                       gap: "12px",
                       padding: "14px 1rem",
-                      borderBottom: isLast ? "none" : `1px solid ${COLORS.border}`,
+                      borderBottom: isLast
+                        ? "none"
+                        : `1px solid ${COLORS.border}`,
                     }}
                   >
+                    {/* Transaction icon */}
                     <motion.div
                       whileHover={{ scale: 1.12 }}
                       whileTap={{ scale: 0.92 }}
@@ -256,10 +262,11 @@ export default function TransactionsScreen() {
                           color: amountColor,
                         }}
                       >
-                        <i className={`ti ${txnIcon(txn)}`} style={{ fontSize: "18px" }} />
+                        <Icon size={18} strokeWidth={2} />
                       </div>
                     </motion.div>
 
+                    {/* Info */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div
                         style={{
@@ -280,16 +287,11 @@ export default function TransactionsScreen() {
                           marginTop: "2px",
                         }}
                       >
-                        {txn.category}
-                        {txn.date && (
-                          <>
-                            {" · "}
-                            {formatTxnDate(txn.date)}
-                          </>
-                        )}
+                        {txn.date && formatTxnDate(txn.date)}
                       </div>
                     </div>
 
+                    {/* Amount */}
                     <div
                       style={{
                         fontSize: "14px",
@@ -302,6 +304,7 @@ export default function TransactionsScreen() {
                       {fmt(txn.amount)}
                     </div>
 
+                    {/* Actions */}
                     <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
                       <button
                         type="button"
@@ -314,9 +317,11 @@ export default function TransactionsScreen() {
                           cursor: "pointer",
                           padding: "4px",
                           fontFamily: "inherit",
+                          display: "flex",
+                          alignItems: "center",
                         }}
                       >
-                        <i className="ti ti-pencil" style={{ fontSize: "16px" }} />
+                        <Pencil size={15} strokeWidth={2} />
                       </button>
                       <button
                         type="button"
@@ -329,9 +334,11 @@ export default function TransactionsScreen() {
                           cursor: "pointer",
                           padding: "4px",
                           fontFamily: "inherit",
+                          display: "flex",
+                          alignItems: "center",
                         }}
                       >
-                        <i className="ti ti-trash" style={{ fontSize: "16px" }} />
+                        <Trash2 size={15} strokeWidth={2} />
                       </button>
                     </div>
                   </div>
