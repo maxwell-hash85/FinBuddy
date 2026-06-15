@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useTheme } from "../../context/useTheme";
-import { useProfile } from "../../context/ProfileProvider";
+import { useProfile } from "../../hooks/useProfile";
 import { useTransactions } from "../../hooks/useTransactions";
 import { parseBankStatementFile } from "../../utils/parseBankStatement";
 import Modal from "../Modal";

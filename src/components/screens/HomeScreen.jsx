@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { Bell } from "lucide-react";
 import { useTheme } from "../../context/useTheme";
-import { useProfile } from "../../context/ProfileProvider";
-import { useNotifications } from "../../context/NotificationsProvider";
+import { useProfile } from "../../hooks/useProfile";
+import { useNotifications } from "../../hooks/useNotifications";
 import { useTransactions } from "../../hooks/useTransactions";
 import { calcTotals, fmt } from "../../utils/calcFinance";
 import { getPrimaryProactiveInsight } from "../../utils/proactiveInsights";
@@ -44,7 +45,7 @@ function timeAwareGreeting(date = new Date()) {
   return "Good evening";
 }
 
-function IconButton({ label, onClick, showBadge }) {
+function IconButton({ label, onClick, showBadge, animateBell }) {
   return (
     <button
       type="button"
@@ -66,7 +67,18 @@ function IconButton({ label, onClick, showBadge }) {
         flexShrink: 0,
       }}
     >
-      <Bell size={18} strokeWidth={2} />
+      <motion.div
+        animate={
+          animateBell ? { rotate: [0, -18, 18, -12, 12, 0] } : { rotate: 0 }
+        }
+        transition={
+          animateBell
+            ? { duration: 0.6, repeat: Infinity, repeatDelay: 3 }
+            : undefined
+        }
+      >
+        <Bell size={18} strokeWidth={2} />
+      </motion.div>
       {showBadge && (
         <span
           style={{
@@ -160,6 +172,7 @@ export default function HomeScreen({ userName, onNavigate }) {
           <IconButton
             label="Notifications"
             showBadge={unreadCount > 0}
+            animateBell={unreadCount > 0}
             onClick={() => setShowNotifications(true)}
           />
         </div>
@@ -382,22 +395,28 @@ export default function HomeScreen({ userName, onNavigate }) {
                     borderBottom: isLast ? "none" : `1px solid ${COLORS.border}`,
                   }}
                 >
-                  <div
-                    style={{
-                      width: "40px",
-                      height: "40px",
-                      borderRadius: "12px",
-                      background: COLORS.bg,
-                      border: `1px solid ${COLORS.border}`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                      color: amountColor,
-                    }}
+                  <motion.div
+                    whileHover={{ scale: 1.12 }}
+                    whileTap={{ scale: 0.92 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 18 }}
                   >
-                    <Icon size={18} strokeWidth={2} />
-                  </div>
+                    <div
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "12px",
+                        background: COLORS.bg,
+                        border: `1px solid ${COLORS.border}`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                        color: amountColor,
+                      }}
+                    >
+                      <Icon size={18} strokeWidth={2} />
+                    </div>
+                  </motion.div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div

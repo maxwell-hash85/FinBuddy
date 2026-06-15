@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { Send } from "lucide-react";
 import { useTheme } from "../../context/useTheme";
 import { useTransactions } from "../../hooks/useTransactions";
 import { streamBuddyReply } from "../../utils/buddyChatApi";
@@ -45,6 +47,7 @@ export default function BuddyScreen() {
   ]);
   const [draft, setDraft] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [sendLaunch, setSendLaunch] = useState(0);
   const listRef = useRef(null);
   const abortRef = useRef(null);
 
@@ -84,6 +87,7 @@ export default function BuddyScreen() {
     const buddyMsg = { id: buddyId, role: "buddy", text: "" };
 
     setDraft("");
+    setSendLaunch((k) => k + 1);
     setMessages((prev) => [...prev, userMsg, buddyMsg]);
     setIsStreaming(true);
 
@@ -148,7 +152,16 @@ export default function BuddyScreen() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <BuddyAvatar size={40} />
+          <motion.div
+            animate={isStreaming ? { scale: [1, 1.08, 1] } : { scale: 1 }}
+            transition={
+              isStreaming
+                ? { duration: 0.8, repeat: Infinity, ease: "easeInOut" }
+                : undefined
+            }
+          >
+            <BuddyAvatar size={40} />
+          </motion.div>
           <div>
             <div
               style={{
@@ -203,7 +216,18 @@ export default function BuddyScreen() {
                 gap: isUser ? 0 : "8px",
               }}
             >
-              {!isUser && <BuddyAvatar size={28} />}
+              {!isUser && (
+                <motion.div
+                  animate={isTyping ? { scale: [1, 1.08, 1] } : { scale: 1 }}
+                  transition={
+                    isTyping
+                      ? { duration: 0.8, repeat: Infinity, ease: "easeInOut" }
+                      : undefined
+                  }
+                >
+                  <BuddyAvatar size={28} />
+                </motion.div>
+              )}
               <div
                 style={{
                   maxWidth: isUser ? "85%" : "78%",
@@ -281,7 +305,15 @@ export default function BuddyScreen() {
             transition: "opacity 0.15s ease",
           }}
         >
-          <i className="ti ti-send" style={{ fontSize: "18px" }} />
+          <motion.div
+            key={sendLaunch}
+            animate={{ x: [0, 4, 0] }}
+            whileTap={{ scale: 0.75, rotate: 15 }}
+            transition={{ type: "spring", stiffness: 500, damping: 15 }}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <Send size={18} strokeWidth={2} />
+          </motion.div>
         </button>
       </div>
     </div>

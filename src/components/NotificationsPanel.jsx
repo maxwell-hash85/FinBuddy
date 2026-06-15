@@ -1,5 +1,5 @@
 import { useTheme } from "../context/useTheme";
-import { useNotifications } from "../context/NotificationsProvider";
+import { useNotifications } from "../hooks/useNotifications";
 
 const GREEN = "#2bc62c";
 

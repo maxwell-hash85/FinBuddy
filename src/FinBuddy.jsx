@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "./context/useTheme";
 import { Home, MessageCircle, List, User } from "lucide-react";
 
@@ -86,7 +87,17 @@ export default function FinBuddy() {
               : `clamp(1.25rem, 4vw, 2rem) clamp(1rem, 4vw, 1.5rem) calc(${NAV_HEIGHT}px + env(safe-area-inset-bottom, 0px) + 1.5rem)`,
         }}
       >
-        {renderScreen()}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            {renderScreen()}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       <nav
@@ -133,8 +144,28 @@ export default function FinBuddy() {
                 transition: "color 0.15s ease",
               }}
             >
-              <Icon size={22} strokeWidth={2} color={color} />
-              <span style={{ fontSize: "10px", fontWeight: isActive ? 600 : 500 }}>{tab.label}</span>
+              <motion.div
+                whileTap={{ scale: 0.85 }}
+                initial={isActive ? { scale: 0.7, opacity: 0 } : false}
+                animate={isActive ? { scale: 1, opacity: 1 } : { scale: 1, opacity: 1 }}
+                transition={
+                  isActive ? { type: "spring", stiffness: 400, damping: 20 } : undefined
+                }
+              >
+                <Icon size={22} strokeWidth={2} color={color} />
+              </motion.div>
+              {isActive ? (
+                <motion.span
+                  initial={{ opacity: 0, y: 3 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 }}
+                  style={{ fontSize: "10px", fontWeight: 600 }}
+                >
+                  {tab.label}
+                </motion.span>
+              ) : (
+                <span style={{ fontSize: "10px", fontWeight: 500 }}>{tab.label}</span>
+              )}
             </button>
           );
         })}

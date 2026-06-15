@@ -1,8 +1,7 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { TransactionsContext } from "./transactionsContext";
 
 const STORAGE_KEY = "finbuddy_transactions";
-
-const TransactionsContext = createContext(null);
 
 function useTransactionsState() {
   const [transactions, setTransactions] = useState(() => {
@@ -92,10 +91,3 @@ export function TransactionsProvider({ children }) {
   );
 }
 
-export function useTransactions() {
-  const ctx = useContext(TransactionsContext);
-  if (!ctx) {
-    throw new Error("useTransactions must be used within TransactionsProvider");
-  }
-  return ctx;
-}

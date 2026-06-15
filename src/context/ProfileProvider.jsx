@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { ProfileContext } from "./profileContext";
 
 export const PROFILE_KEY = "finbuddy_profile";
 const CURRENCIES = {
@@ -6,8 +7,6 @@ const CURRENCIES = {
   USD: { label: "USD $", symbol: "$" },
   GBP: { label: "GBP £", symbol: "£" },
 };
-
-const ProfileContext = createContext(null);
 
 function loadStoredProfile() {
   try {
@@ -66,10 +65,4 @@ export function ProfileProvider({ children }) {
   );
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;
-}
-
-export function useProfile() {
-  const ctx = useContext(ProfileContext);
-  if (!ctx) throw new Error("useProfile must be used within ProfileProvider");
-  return ctx;
 }

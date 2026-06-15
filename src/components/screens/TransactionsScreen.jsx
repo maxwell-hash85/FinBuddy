@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { Plus } from "lucide-react";
 import { useTheme } from "../../context/useTheme";
 import { useTransactions } from "../../hooks/useTransactions";
 import { fmt } from "../../utils/calcFinance";
@@ -96,7 +98,14 @@ export default function TransactionsScreen() {
             fontFamily: "inherit",
           }}
         >
-          <i className="ti ti-plus" style={{ fontSize: "20px" }} />
+          <motion.div
+            whileHover={{ rotate: 90 }}
+            whileTap={{ scale: 0.85 }}
+            transition={{ type: "spring", stiffness: 300, damping: 18 }}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <Plus size={20} strokeWidth={2} />
+          </motion.div>
         </button>
       </header>
 
@@ -228,22 +237,28 @@ export default function TransactionsScreen() {
                       borderBottom: isLast ? "none" : `1px solid ${COLORS.border}`,
                     }}
                   >
-                    <div
-                      style={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "12px",
-                        background: COLORS.bg,
-                        border: `1px solid ${COLORS.border}`,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                        color: amountColor,
-                      }}
+                    <motion.div
+                      whileHover={{ scale: 1.12 }}
+                      whileTap={{ scale: 0.92 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 18 }}
                     >
-                      <i className={`ti ${txnIcon(txn)}`} style={{ fontSize: "18px" }} />
-                    </div>
+                      <div
+                        style={{
+                          width: "40px",
+                          height: "40px",
+                          borderRadius: "12px",
+                          background: COLORS.bg,
+                          border: `1px solid ${COLORS.border}`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          color: amountColor,
+                        }}
+                      >
+                        <i className={`ti ${txnIcon(txn)}`} style={{ fontSize: "18px" }} />
+                      </div>
+                    </motion.div>
 
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div

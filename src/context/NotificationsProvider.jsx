@@ -1,11 +1,10 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTransactions } from "../hooks/useTransactions";
 import { buildNotifications } from "../utils/buildNotifications";
-import { useProfile } from "./ProfileProvider";
+import { useProfile } from "../hooks/useProfile";
+import { NotificationsContext } from "./notificationsContext";
 
 const READ_KEY = "finbuddy_notifications_read";
-
-const NotificationsContext = createContext(null);
 
 function loadReadIds() {
   try {
@@ -67,8 +66,3 @@ export function NotificationsProvider({ children }) {
   );
 }
 
-export function useNotifications() {
-  const ctx = useContext(NotificationsContext);
-  if (!ctx) throw new Error("useNotifications must be used within NotificationsProvider");
-  return ctx;
-}
